@@ -11,7 +11,7 @@ ENV CGO_ENABLED 0
 RUN apk update &&\
     apk add --no-cache ca-certificates curl git gcc build-base && \
     update-ca-certificates && \
-	go install github.com/wader/fq@latest
+	go install github.com/wader/fq@master
 
 FROM alpine:3.16
 
