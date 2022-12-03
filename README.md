@@ -15,11 +15,8 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 - [container-cyberchef-server](https://github.com/reuteras/container-cyberchef-server)
 - [container-notebook](https://github.com/reuteras/container-notebook)
 - [container-rt](https://github.com/reuteras/container-rt)
-- [container-vipermonkey](https://github.com/reuteras/container-vipermonkey)
 - [container-vma](https://github.com/reuteras/container-vma)
 - [container-wise](https://github.com/reuteras/container-wise)
 - [container-zeek](https://github.com/reuteras/container-zeek)
 - [docker-rt](https://github.com/reuteras/docker-rt)
-- [docker-viper](https://github.com/reuteras/docker-viper)
-- [docker-vtmon](https://github.com/reuteras/docker-vtmon)
 
