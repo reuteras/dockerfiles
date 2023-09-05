@@ -1,5 +1,7 @@
 # biodiff
 
+A container for [biodiff](https://github.com/8051Enthusiast/biodiff).
+
 ## Build
 
 Build the container:
