@@ -1,5 +1,11 @@
 # fq
 
+```text
+jq for binary formats - tool, language and decoders for working with binary and text formatsi
+```
+
+Read more about fq on [https://github.com/wader/fq](https://github.com/wader/fq).
+
 ## Build
 
 Build the container:

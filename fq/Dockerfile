@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.16 AS build
+FROM golang:1.21-alpine3.18 AS build
 
 WORKDIR /go/src/github.com/wader/fq
 
@@ -13,7 +13,7 @@ RUN apk update &&\
     update-ca-certificates && \
 	go install github.com/wader/fq@master
 
-FROM alpine:3.16
+FROM alpine:3.18
 
 COPY --from=build /go/bin/fq /fq
 
