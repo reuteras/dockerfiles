@@ -11,5 +11,5 @@ FROM alpine:3.18
 
 COPY --from=build /go/bin/flightsim /bin/flightsim
 
-CMD ["/bin/flightsim"]
-#ENTRYPOINT ["/bin/flightsim", "--help"]
+ENTRYPOINT ["/bin/flightsim"]
+CMD ["--help"]
