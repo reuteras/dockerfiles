@@ -1,5 +1,11 @@
 # flightsim
 
+```text
+A utility to safely generate malicious network traffic patterns and evaluate controls.
+```
+
+Read more about flightsim on [https://github.com/alphasoc/flightsim](https://github.com/alphasoc/flightsim).
+
 ## Build
 
 Build the container:
