@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.18 AS build
+FROM golang:1-alpine AS build
 
 WORKDIR /go
 
@@ -7,7 +7,7 @@ RUN apk update &&\
     update-ca-certificates && \
 	go install github.com/alphasoc/flightsim@latest
 
-FROM alpine:3.18
+FROM alpine:3
 
 COPY --from=build /go/bin/flightsim /bin/flightsim
 
