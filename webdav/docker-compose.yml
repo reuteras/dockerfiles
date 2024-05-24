@@ -13,11 +13,7 @@ services:
     ports:
       - '127.0.0.1:80:80'
     volumes:
-      - 'webdav:/webdav'
+      - './webdav:/webdav'
 
 networks:
   webdav:
-
-volumes:
-  webdav:
-    driver: local
