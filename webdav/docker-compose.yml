@@ -1,0 +1,23 @@
+services:
+  webdav:
+    container_name: webdav-nginx
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - path: ./.env
+        required: true
+    networks:
+      - webdav
+    ports:
+      - '80:80'
+    volumes:
+      - 'webdav:/webdav'
+
+networks:
+  webdav:
+
+volumes:
+  webdav:
+    driver: local
