@@ -11,7 +11,10 @@ services:
     networks:
       - webdav
     ports:
-      - '127.0.0.1:80:80'
+      - name: webdav
+        target: 80
+        host_ip: 127.0.0.1
+        published: 8081
     volumes:
       - './webdav:/webdav'
 
