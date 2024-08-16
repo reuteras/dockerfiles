@@ -1,0 +1,5 @@
+# Ignore production settings
+cert
+rt/.env
+rt/files/*.pem
+rt/files/RT_SiteConfig.pm

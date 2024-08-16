@@ -1,0 +1,60 @@
+services:
+  db:
+    container_name: db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - ./rt/.env
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  rt:
+    container_name: rt
+    image: reuteras/container-rt:latest
+    build:
+      context:
+        ./rt
+    restart: unless-stopped
+    env_file:
+      - ./rt/.env
+    ports:
+      - "443:8443"
+    volumes:
+      - ./rt/files:/data:ro
+      - ./cert:/etc/letsencrypt
+    depends_on:
+      - db
+    networks:
+      - frontend
+      - backend
+
+  cron:
+    container_name: cron
+    build:
+      context:
+        ./cron
+    restart: unless-stopped
+    env_file:
+      - ./rt/.env
+    ports:
+      - "80:8080"
+    volumes:
+      - ./cert:/etc/letsencrypt
+      - backup:/backup
+    depends_on:
+      - db
+      - rt
+    networks:
+      - backend
+
+volumes:
+  backup:
+  db:
+
+networks:
+  frontend:
+    name: frontend
+  backend:
+    name: backend
