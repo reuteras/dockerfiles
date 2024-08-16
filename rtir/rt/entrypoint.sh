@@ -49,6 +49,7 @@ done
 if ! PGPASSWORD="$RT_PASSWORD" psql -h "$RT_DB_HOST" -U "$RT_USER" -lqt | cut -d \| -f 1 | grep -qw "$RT_DB_NAME" ; then
     echo "Setup database"
     /opt/rt5/sbin/rt-setup-database --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD" --action init
+    cd /tmp/rtir/RT* || exit
     echo "$POSTGRES_PASSWORD" | perl -Ilib -I"/opt/rt5/local/lib" -I"/opt/rt5/lib" -Iinc -MModule::Install::RTx::Runtime -e"RTxDatabase(qw(insert $(NAME) $(VERSION)))"
     echo "Database setup done."
 else
