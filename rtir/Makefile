@@ -1,23 +1,23 @@
 all: up
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 
 rm:
-	docker-compose rm
+	docker compose rm
 
 pull:
 	docker pull reuteras/container-rt
 
 clean:
-	docker-compose stop
-	docker-compose rm --force
+	docker compose stop
+	docker compose rm --force
 
 database-upgrade:
-	docker-compose exec -T --user rt-service --workdir /opt/rt5 rt /opt/rt5/sbin/rt-setup-database --action upgrade
+	docker compose exec -T --user rt-service --workdir /opt/rt5 rt /opt/rt5/sbin/rt-setup-database --action upgrade
 
 build:
 	docker build --tag=docker-rt-test rt
