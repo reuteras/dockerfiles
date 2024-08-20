@@ -7,7 +7,7 @@ Set($CorrespondAddress , 'rt@example.me');
 Set($CommentAddress , 'rt-comment@example.me');
 
 # Web
-Set($WebPort, 443);
+Set($WebPort, 80);
 Set($WebPath , "");
 Set($WebBaseURL , "https://rt.example.com");
 Set($WebURL , "https://rt.example.com/");
@@ -44,5 +44,8 @@ Set(%GnuPG,
 );
 Plugin('RT::Extension::TerminalTheme');
 Plugin('RT::IR');
+
+Set($TracerouteCommand, "/usr/bin/traceroute");
+Set($RTIR_RedirectOnLogin, 1);
 
 1;
