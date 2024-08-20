@@ -20,15 +20,14 @@ services:
   db:
     container_name: db
     image: postgres:16-alpine
+    env_file: ".env"
     restart: unless-stopped
-    env_file:
-      - ./rt/.env
     volumes:
       - db:/var/lib/postgresql/data
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "rt"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${RT_DB_NAME}"]
       interval: 30s
       timeout: 60s
       retries: 5
@@ -41,8 +40,7 @@ services:
       context:
         ./rt
     restart: unless-stopped
-    env_file:
-      - ./rt/.env
+    env_file: ".env"
     volumes:
       - ./rt/files:/data:ro
       - ./cert:/etc/letsencrypt

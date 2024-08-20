@@ -1,4 +1,4 @@
 # Ignore production settings
 Caddyfile
-rt/.env
+.env
 rt/files/RT_SiteConfig.pm
