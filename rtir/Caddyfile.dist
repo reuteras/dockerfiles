@@ -1,4 +1,4 @@
 example.com
 
-reverse_proxy rt:8443
+reverse_proxy rt:80
 

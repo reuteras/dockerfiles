@@ -57,8 +57,7 @@ services:
       context:
         ./cron
     restart: unless-stopped
-    env_file:
-      - ./rt/.env
+    env_file: ".env"
     volumes:
       - backup:/backup
     depends_on:
