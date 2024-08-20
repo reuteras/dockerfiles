@@ -16,6 +16,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - frontend
 
   db:
     container_name: db
@@ -43,7 +45,6 @@ services:
     env_file: ".env"
     volumes:
       - ./rt/files:/data:ro
-      - ./cert:/etc/letsencrypt
     depends_on:
       db:
         condition: service_healthy

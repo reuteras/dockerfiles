@@ -37,7 +37,8 @@ RUN apt update -yqq && \
         openssl \
         perl \
         postgresql-client \
-        ssl-cert && \
+        ssl-cert \
+        traceroute && \
 # Create user and group
     addgroup \
         --gid "$GID" \
