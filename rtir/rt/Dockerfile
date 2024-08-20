@@ -1,13 +1,15 @@
 FROM debian:bookworm-slim
 LABEL maintainer="Coding <code@ongoing.today>"
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # Perl settings -n to don't to tests
-ENV RT_FIX_DEPS_CMD /usr/bin/cpanm
-ENV PERL_CPANM_OPT -n
+ENV RT_FIX_DEPS_CMD=/usr/bin/cpanm
+ENV PERL_CPANM_OPT=-n
 ENV USER=rt-service
 ENV UID=1000
 ENV GID=1000
+ENV RT_VERSION=5.0.7
+ENV RTIR_VERSION=5.0.6
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN apt update -yqq && \
@@ -52,7 +54,7 @@ RUN apt update -yqq && \
     chmod 0750 /opt/rt5 && \
     chown rt-service:rt-service /opt/rt5 && \
     mkdir -p /tmp/rt && \
-    curl -SL https://download.bestpractical.com/pub/rt/release/rt-5.0.7.tar.gz | \
+    curl -SL "https://download.bestpractical.com/pub/rt/release/rt-${RT_VERSION}.tar.gz" | \
         tar -xzC /tmp/rt && \
     cd /tmp/rt/rt* && \
     (echo y; echo o conf prerequisites_policy follow; echo o conf commit) | perl -MCPAN -e shell && \
@@ -73,15 +75,18 @@ RUN apt update -yqq && \
     make testdeps && \
     make config-install dirs files-install fixperms instruct && \
     cpanm https://github.com/gbarr/perl-TimeDate.git && \
-    cpanm RT::Extension::TerminalTheme
-RUN mkdir -p /tmp/rtir && \
-    curl -SL https://download.bestpractical.com/pub/rt/release/RT-IR-5.0.6.tar.gz | \
+    cpanm RT::Extension::TerminalTheme && \
+    mkdir -p /tmp/rtir && \
+    curl -SL "https://download.bestpractical.com/pub/rt/release/RT-IR-${RTIR_VERSION}.tar.gz" | \
         tar -xzC /tmp/rtir && \
     cd /tmp/rtir/* && \
     perl Makefile.PL && \
     make install && \
 # Clean up
-    apt remove -y git cpanminus build-essential && \
+    apt remove -y \
+        build-essential \
+        cpanminus \
+        git && \
     apt-get autoremove -y && \
     apt-get clean && \
     apt-get autoclean && \
@@ -97,21 +102,14 @@ COPY entrypoint.sh /entrypoint.sh
 COPY 89-rt.conf /etc/lighttpd/conf-available/89-rt.conf
 
 RUN chmod +x /entrypoint.sh && \
-    sed -i 's/:443/:8443/' \
-        /etc/lighttpd/conf-available/10-ssl.conf && \
     /usr/sbin/lighty-enable-mod accesslog && \
     /usr/sbin/lighty-enable-mod rt && \
-    /usr/sbin/lighty-enable-mod ssl && \
     chmod 770 /opt/rt5/etc && \
     rm -f /opt/rt5/etc/RT_SiteConfig.pm && \
     ln -s /data/RT_SiteConfig.pm /opt/rt5/etc/RT_SiteConfig.pm && \
     chmod 0770 /opt/rt5/var && \
     chmod 0644 /etc/lighttpd/conf-available/89-rt.conf && \
     chown rt-service:rt-service /etc/lighttpd/conf-available/89-rt.conf && \
-    chown rt-service:rt-service /etc/lighttpd/conf-available/10-ssl.conf && \
-    chown -R rt-service:rt-service /etc/letsencrypt && \
-    mkdir -p /var/log/letsencrypt /var/lib/letsencrypt && \
-    chown -R rt-service:rt-service /var/log/letsencrypt /var/lib/letsencrypt && \
     touch /var/run/lighttpd.pid && \
     chown rt-service:rt-service /var/run/lighttpd.pid && \
     chown -R rt-service:rt-service /var/log/lighttpd /var/cache/lighttpd && \

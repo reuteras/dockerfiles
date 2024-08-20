@@ -23,8 +23,6 @@ RUN apk add --no-cache \
         --no-create-home \
         --uid "$UID" \
         "$USER" && \
-    mkdir -p /var/log/letsencrypt /var/lib/letsencrypt && \
-    chown -R ${USER}:${USER} /var/log/letsencrypt /var/lib/letsencrypt && \
     mkdir /backup && \
     chown ${USER}:${USER} /backup
 

@@ -1,5 +1,4 @@
 # Ignore production settings
-cert
+Caddyfile
 rt/.env
-rt/files/*.pem
 rt/files/RT_SiteConfig.pm

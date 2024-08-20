@@ -1,4 +1,21 @@
+---
+
 services:
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      rt:
+        condition: service_started
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
   db:
     container_name: db
     image: postgres:16-alpine
@@ -9,6 +26,12 @@ services:
       - db:/var/lib/postgresql/data
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "db_prod"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
 
   rt:
     container_name: rt
@@ -19,13 +42,12 @@ services:
     restart: unless-stopped
     env_file:
       - ./rt/.env
-    ports:
-      - "443:8443"
     volumes:
       - ./rt/files:/data:ro
       - ./cert:/etc/letsencrypt
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - frontend
       - backend
@@ -44,13 +66,17 @@ services:
       - ./cert:/etc/letsencrypt
       - backup:/backup
     depends_on:
-      - db
-      - rt
+      db:
+        condition: service_healthy
+      rt:
+        condition: service_started
     networks:
       - backend
 
 volumes:
   backup:
+  caddy_data:
+  caddy_config:
   db:
 
 networks:
