@@ -14,31 +14,33 @@ ENV RTIR_VERSION=5.0.6
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN apt update -yqq && \
     apt install -yqq --no-install-recommends \
+        autoconf \
         build-essential \
         ca-certificates \
-        certbot \
         cpanminus \
         curl \
         dnsutils \
-        elinks \
         git \
         gpgv2 \
         gnupg \
         graphviz \
-        libexpat1-dev \
+        libexpat-dev \
         libio-socket-ssl-perl \
         libpq-dev \
         libgd-dev \
         libssl-dev \
+        libz-dev \
         lighttpd \
         lighttpd-mod-openssl \
         mailutils \
         msmtp \
+        multiwatch \
         openssl \
         perl \
         postgresql-client \
         ssl-cert \
-        traceroute && \
+        traceroute \
+        w3m && \
 # Create user and group
     addgroup \
         --gid "$GID" \
@@ -77,6 +79,7 @@ RUN apt update -yqq && \
     make config-install dirs files-install fixperms instruct && \
     cpanm https://github.com/gbarr/perl-TimeDate.git && \
     cpanm RT::Extension::TerminalTheme && \
+    cpanm String::ShellQuote && \
     mkdir -p /tmp/rtir && \
     curl -SL "https://download.bestpractical.com/pub/rt/release/RT-IR-${RTIR_VERSION}.tar.gz" | \
         tar -xzC /tmp/rtir && \
