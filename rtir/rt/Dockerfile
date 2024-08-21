@@ -89,9 +89,6 @@ RUN apt update -yqq && \
 # Clean up
     apt remove -y \
         build-essential \
-        cpanminus \
-        git && \
-    apt-get autoremove -y && \
     apt-get clean && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* && \
