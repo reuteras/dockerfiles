@@ -77,10 +77,9 @@ RUN apt update -yqq && \
     make fixdeps && \
     make testdeps && \
     make config-install dirs files-install fixperms instruct && \
-    cpanm https://github.com/gbarr/perl-TimeDate.git && \
     cpanm RT::Extension::TerminalTheme && \
-    cpanm String::ShellQuote && \
-    cpanm Error && \
+    cpanm Net::Domain::TLD && \
+    cpanm Parse::BooleanLogic && \
     mkdir -p /tmp/rtir && \
     curl -SL "https://download.bestpractical.com/pub/rt/release/RT-IR-${RTIR_VERSION}.tar.gz" | \
         tar -xzC /tmp/rtir && \
