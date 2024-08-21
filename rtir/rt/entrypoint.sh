@@ -28,7 +28,10 @@ if ! PGPASSWORD="$RT_PASSWORD" psql -h "$RT_DB_HOST" -U "$RT_USER" -lqt | cut -d
     /opt/rt5/sbin/rt-setup-database --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD" --action init
     cd /tmp/rtir/RT* || exit
     echo "$POSTGRES_PASSWORD" | perl -Ilib -I"/opt/rt5/local/lib" -I"/opt/rt5/lib" -Iinc -MModule::Install::RTx::Runtime -e"RTxDatabase(qw(insert 'RT::IR' $(RTIR_VERSION)))"
-    echo "Database setup done."
+    echo "Setup index"
+    echo "" | /opt/rt5/sbin/rt-setup-fulltext-index --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD"
+    /opt/rt5/sbin/rt-fulltext-indexer
+    echo "Database setup and index done."
 else
     echo "Check if database needs an upgrade."
     # /opt/rt5/sbin/rt-setup-database --action upgrade --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD"

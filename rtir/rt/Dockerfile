@@ -18,6 +18,7 @@ RUN apt update -yqq && \
         build-essential \
         ca-certificates \
         cpanminus \
+        cron \
         curl \
         dnsutils \
         git \
@@ -39,6 +40,7 @@ RUN apt update -yqq && \
         perl \
         postgresql-client \
         ssl-cert \
+        supervisor \
         traceroute \
         w3m && \
 # Create user and group
@@ -53,6 +55,7 @@ RUN apt update -yqq && \
         --no-create-home \
         --uid "$UID" \
         "$USER" && \
+    mkdir -p /var/log/supervisor && \
     mkdir -p /opt/rt5 && \
     chmod 0750 /opt/rt5 && \
     chown rt-service:rt-service /opt/rt5 && \
@@ -99,8 +102,10 @@ RUN apt update -yqq && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
 # Copy files to docker
-COPY entrypoint.sh /entrypoint.sh
 COPY 89-rt.conf /etc/lighttpd/conf-available/89-rt.conf
+COPY pg_backup.sh /etc/periodic/daily/pg_backup
+COPY entrypoint.sh /entrypoint.sh
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN chmod +x /entrypoint.sh && \
     /usr/sbin/lighty-enable-mod accesslog && \
@@ -121,7 +126,6 @@ RUN chmod +x /entrypoint.sh && \
     chown rt-service:rt-service /etc/msmtprc && \
     ln -s /usr/bin/msmtp /usr/sbin/sendmail
 
-USER rt-service
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["/usr/sbin/lighttpd", "-D", "-f", "/etc/lighttpd/lighttpd.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

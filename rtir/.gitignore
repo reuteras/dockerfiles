@@ -2,3 +2,4 @@
 Caddyfile
 .env
 rt/files/RT_SiteConfig.pm
+rt/files/RTIR_SiteConfig.pm
