@@ -1,0 +1,6 @@
+0 0 * * * rt-service /opt/rt5/sbin/rt-clean-sessions
+0 0 * * * rt-service /opt/rt5/sbin/rt-email-digest -m daily
+0 0 * * 0 rt-service /opt/rt5/sbin/rt-email-digest -m weekly
+0 * * * * rt-service /opt/rt5/sbin/rt-email-dashboards
+*/5 * * * * rt-service /opt/rt5/sbin/rt-fulltext-indexer
+10 3 * * * rt-service /opt/rt5/pg_backup.sh

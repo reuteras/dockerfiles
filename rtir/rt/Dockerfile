@@ -103,16 +103,21 @@ RUN apt update -yqq && \
 
 # Copy files to docker
 COPY 89-rt.conf /etc/lighttpd/conf-available/89-rt.conf
-COPY pg_backup.sh /etc/periodic/daily/pg_backup
 COPY entrypoint.sh /entrypoint.sh
+COPY crontab /var/spool/cron/crontabs/rt-service
+COPY pg_backup.sh /opt/rt5/pg_backup.sh
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN chmod +x /entrypoint.sh && \
+RUN chmod +x /entrypoint.sh /opt/rt5/pg_backup.sh && \
+    chmod 0600 /var/spool/cron/crontabs/rt-service && \
+    chown rt-service:crontab /var/spool/cron/crontabs/rt-service && \
     /usr/sbin/lighty-enable-mod accesslog && \
     /usr/sbin/lighty-enable-mod rt && \
     chmod 770 /opt/rt5/etc && \
     rm -f /opt/rt5/etc/RT_SiteConfig.pm && \
+    rm -f /opt/rt5/etc/RTIR_SiteConfig.pm && \
     ln -s /data/RT_SiteConfig.pm /opt/rt5/etc/RT_SiteConfig.pm && \
+    ln -s /data/RTIR_SiteConfig.pm /opt/rt5/etc/RTIR_SiteConfig.pm && \
     chmod 0770 /opt/rt5/var && \
     chmod 0644 /etc/lighttpd/conf-available/89-rt.conf && \
     chown rt-service:rt-service /etc/lighttpd/conf-available/89-rt.conf && \
