@@ -88,7 +88,7 @@ RUN apt update -yqq && \
     make install && \
 # Clean up
     apt remove -y \
-        build-essential \
+        build-essential && \
     apt-get clean && \
     apt-get autoclean && \
     rm -rf /var/lib/apt/lists/* && \
