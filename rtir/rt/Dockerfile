@@ -80,6 +80,7 @@ RUN apt update -yqq && \
     cpanm https://github.com/gbarr/perl-TimeDate.git && \
     cpanm RT::Extension::TerminalTheme && \
     cpanm String::ShellQuote && \
+    cpanm Error && \
     mkdir -p /tmp/rtir && \
     curl -SL "https://download.bestpractical.com/pub/rt/release/RT-IR-${RTIR_VERSION}.tar.gz" | \
         tar -xzC /tmp/rtir && \
