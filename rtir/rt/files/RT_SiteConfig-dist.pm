@@ -34,8 +34,9 @@ Set( %FullTextSearch,
     Enable     => 1,
     Indexed    => 1,
     Column     => 'ContentIndex',
-    Table      => 'Attachments',
+    Table      => 'AttachmentsIndex',
 );
+
 Set(%GnuPG,
     Enable                 => 0,
     GnuPG                  => '/usr/bin/gpg',
@@ -44,8 +45,5 @@ Set(%GnuPG,
 );
 Plugin('RT::Extension::TerminalTheme');
 Plugin('RT::IR');
-
-Set($TracerouteCommand, "/usr/bin/traceroute");
-Set($RTIR_RedirectOnLogin, 1);
 
 1;
