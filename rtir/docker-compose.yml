@@ -3,6 +3,7 @@
 services:
 
   caddy:
+    container_name: caddy
     image: caddy:2.8-alpine
     restart: unless-stopped
     ports:
@@ -50,23 +51,6 @@ services:
         condition: service_healthy
     networks:
       - frontend
-      - backend
-
-  cron:
-    container_name: cron
-    build:
-      context:
-        ./cron
-    restart: unless-stopped
-    env_file: ".env"
-    volumes:
-      - backup:/backup
-    depends_on:
-      db:
-        condition: service_healthy
-      rt:
-        condition: service_started
-    networks:
       - backend
 
 volumes:
