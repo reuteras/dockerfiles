@@ -125,10 +125,9 @@ RUN chmod +x /entrypoint.sh /opt/rt5/pg_backup.sh && \
     chown rt-service:rt-service /var/run/lighttpd.pid && \
     chown -R rt-service:rt-service /var/log/lighttpd /var/cache/lighttpd && \
     chown -R rt-service:rt-service /opt/rt5 && \
-    echo "host $RT_RELAYHOST" > /etc/msmtprc && \
-    echo "from $RT_SENDER" >> /etc/msmtprc && \
-    echo "domain $RT_DOMAIN" >> /etc/msmtprc && \
+    touch /etc/msmtprc && \
     chown rt-service:rt-service /etc/msmtprc && \
+    chmod 0600 /etc/msmtprc && \
     ln -s /usr/bin/msmtp /usr/sbin/sendmail
 
 ENTRYPOINT ["/entrypoint.sh"]
