@@ -32,13 +32,16 @@ if ! PGPASSWORD="$RT_PASSWORD" psql -h "$RT_DB_HOST" -U "$RT_USER" -lqt | cut -d
     echo "" | /opt/rt5/sbin/rt-setup-fulltext-index --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD"
     /opt/rt5/sbin/rt-fulltext-indexer
     echo "Database setup and index done."
+else
+    echo "Check if database needs an upgrade."
+    # /opt/rt5/sbin/rt-setup-database --action upgrade --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD"
+fi
+
+if ! grep "$RT_DOMAIN" /etc/msmtprc > /dev/null ; then
     echo "Fix sendmail."
     echo "host $RT_RELAYHOST" > /etc/msmtprc
     echo "from $RT_SENDER" >> /etc/msmtprc
     echo "domain $RT_DOMAIN" >> /etc/msmtprc
-else
-    echo "Check if database needs an upgrade."
-    # /opt/rt5/sbin/rt-setup-database --action upgrade --dba="$POSTGRES_USER" --dba-password="$POSTGRES_PASSWORD"
 fi
 
 exec "$@"
