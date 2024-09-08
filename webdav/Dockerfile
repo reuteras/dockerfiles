@@ -1,4 +1,4 @@
-FROM debian:12-slim
+FROM debian:bookworm-slim
 LABEL maintainer="Coding <code@ongoing.today>"
 
 # hadolint ignore=DL3005,DL3008,DL3015

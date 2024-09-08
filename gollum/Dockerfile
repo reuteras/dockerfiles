@@ -1,4 +1,4 @@
-FROM ruby:2.7
+FROM ruby:3
 LABEL maintainer="Coding <code@ongoing.today>"
 RUN apt-get -y update && \
     apt-get -y dist-upgrade && \
@@ -13,5 +13,5 @@ RUN apt-get -y update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /wiki
-ENTRYPOINT ["gollum", "--port", "8080"]
+ENTRYPOINT ["gollum", "--port", "8080", "--lenient-tag-lookup", "."]
 EXPOSE 8080
