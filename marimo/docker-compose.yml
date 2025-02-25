@@ -4,11 +4,13 @@ services:
   marimo:
     build: .
     container_name: marimo
+    stdin_open: true
+    tty: true
     volumes:
-      - ./data:/data
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ./data/files:/data
+      - ./data/config:/root/.config
+    entrypoint: /bin/bash
     ports:
-      - 127.0.0.1:2718:2718
+      - 2718:2718
     restart: unless-stopped
 
