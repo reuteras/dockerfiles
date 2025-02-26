@@ -3,24 +3,24 @@ LABEL maintainer="Coding <code@ongoing.today>"
 
 # Install uv for fast package management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-ENV UV_SYSTEM_PYTHON=1
-
-SHELL [ "/bin/bash", "-c" ]
 
 RUN apt-get -y update && \
     apt-get -y install --no-install-recommends \
         git \
         vim && \
-    uv venv .venv && \
-    uv pip install pip --upgrade && \
-    uv pip install marimo[sql] --upgrade
+    useradd -m marimo && \
+    mkdir /data && \
+    chown marimo:marimo /data
 
-WORKDIR /marimo
+WORKDIR /home/marimo
+USER marimo
 
-# Create a non-root user and switch to it
-RUN useradd -m app_user
-USER app_user
+RUN uv venv --seed .venv && \
+    . /home/marimo/.venv/bin/activate && \
+    python3 -m pip install -U pip && \
+    python3 -m pip install -U marimo
 
-#CMD [ "/.venv/bin/marimo", "edit", "--host", "0.0.0.0", "--no-token" ]
-ENTRYPOINT ["/.venv/bin/marimo", "edit", "--host", "0.0.0.0"]
+WORKDIR /data
+
+ENTRYPOINT ["/home/marimo/.venv/bin/marimo", "edit", "--sandbox", "--host", "0.0.0.0", "--no-token", "app.py" ]
 EXPOSE  2718
