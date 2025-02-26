@@ -4,13 +4,15 @@ services:
   marimo:
     build: .
     container_name: marimo
-    stdin_open: true
-    tty: true
     volumes:
       - ./data/files:/data
-      - ./data/config:/root/.config
-    entrypoint: /bin/bash
+      - venv:/home/marimo/.venv
+      - cache_uv:/home/marimo/.cache/uv
+      - ./data/config:/home/marimo/.config
     ports:
       - 2718:2718
     restart: unless-stopped
 
+volumes:
+  venv:
+  cache_uv:
