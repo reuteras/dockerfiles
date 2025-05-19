@@ -25,5 +25,14 @@ services:
       - host.docker.internal:host-gateway
     restart: unless-stopped
 
+  mcpo:
+    container_name: mcpo
+    image: "ghcr.io/open-webui/mcpo:main"
+    volumes:
+      - ./mcpo.config:/mcpo.config
+    command: mcpo --config=/mcpo.config --api-key "top-secret" --port 8000
+    ports:
+      - 8000:8000
+
 volumes:
   open-webui: {}
