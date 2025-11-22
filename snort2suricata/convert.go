@@ -1,10 +1,11 @@
 package main
 
 import (
-    "github.com/google/gonids"
-    "bufio"
-    "os"
-    "fmt"
+	"bufio"
+	"fmt"
+	"os"
+
+	"github.com/google/gonids"
 )
 
 func main() {  
