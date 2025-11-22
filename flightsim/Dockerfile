@@ -5,7 +5,7 @@ WORKDIR /go
 RUN apk update && \
     apk add --no-cache ca-certificates=2025-1-7-r0 curl=8.12.1-r0 git=2.47.1-r0 gcc=14.2.0-r2 build-base=0.5-r3 && \
     update-ca-certificates && \
-    go install github.com/alphasoc/flightsim@latest && \
+    go install github.com/alphasoc/flightsim@v0.8.4 && \
     rm -rf /var/cache/apk/*
 
 FROM alpine:3.21

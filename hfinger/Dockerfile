@@ -16,17 +16,16 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     libmagic1=1:5.46-1 \
     tshark=4.2.4-1~deb12u1 && \
     git clone https://github.com/CERT-Polska/hfinger.git && \
-    cd hfinger && \
-    python3 -m venv $VIRTUAL_ENV && \
-    pip3 install --no-cache-dir setuptools && \
-    python3 setup.py install && \
     apt-get autoremove -y git ca-certificates && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    rm -rf /var/lib/apt/lists/* /usr/share/doc && \
-    rm -rf /hfinger/.git && \
-    rm -rf /usr/local/share/man /var/cache/debconf/*-old
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /hfinger
+
+RUN python3 -m venv $VIRTUAL_ENV && \
+    pip3 install --no-cache-dir setuptools==73.0.1 && \
+    python3 setup.py install && \
+    rm -rf .git && \
+    rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
 USER nobody
 

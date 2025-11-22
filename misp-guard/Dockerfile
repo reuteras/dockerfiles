@@ -6,9 +6,11 @@ RUN apt-get update && \
     apt-get dist-upgrade -yqq && \
     apt-get install -yq --no-install-recommends git=1:2.43.0-1.1 && \
     git clone https://github.com/MISP/misp-guard.git && \
-    cd misp-guard/src && \
-    python -m pip install --no-cache-dir -r requirements.txt && \
     apt-get clean && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/misp-guard/src
+
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
 USER nobody
 

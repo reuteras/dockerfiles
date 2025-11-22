@@ -29,9 +29,11 @@ RUN apt-get update -yqq && \
         libtool=2.4.7-5 \
         pkg-config=1.8.1-1
 
-RUN git clone https://github.com/ntop/nDPI.git && \
-    cd nDPI && \
-    ./autogen.sh && \
+RUN git clone https://github.com/ntop/nDPI.git
+
+WORKDIR /src/nDPI
+
+RUN ./autogen.sh && \
     ./configure --prefix=/opt && \
     make && \
     make install && \
