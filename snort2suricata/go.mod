@@ -1,3 +1,5 @@
 module github.com/reuteras/snort2suricata
 
-require github.com/google/gonids latest
+go 1.23
+
+require github.com/google/gonids v0.0.0-20250718035548-a83587b2cdba
