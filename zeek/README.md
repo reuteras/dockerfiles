@@ -1,6 +1,6 @@
 # container-zeek
 
-Build for arm64 and amd64. 
+Build for arm64 and amd64.
 
 Switch back to building from source and using the LTS version to be able to use more zkg packages.
 

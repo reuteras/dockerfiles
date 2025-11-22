@@ -23,5 +23,5 @@ To use it with Microsoft [avml](https://github.com/microsoft/avml), observe that
     avml --url http://localhost/upload/$(hostname)-output.lime output.lime
 
 With curl you can use the following command to PUT the file:
-    
+
     curl --upload-file upload.conf http://localhost/upload/upload.conf
