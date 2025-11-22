@@ -18,8 +18,7 @@ func main() {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		rule := string(line)
-		r, err := gonids.ParseRule(rule)
+		r, err := gonids.ParseRule(line)
 		if err != nil {
 			// Handle parse error
 			continue
