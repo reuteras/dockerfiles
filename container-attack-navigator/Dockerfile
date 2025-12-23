@@ -10,6 +10,7 @@ WORKDIR /src
 
 COPY offline.sh /offline.sh
 
+# hadolint ignore=DL3003,DL3008
 RUN apt-get update --fix-missing && \
     apt-get install -qqy --no-install-recommends \
         ca-certificates \
