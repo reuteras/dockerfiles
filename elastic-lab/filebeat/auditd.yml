@@ -1,0 +1,9 @@
+
+
+- module: auditd
+  log:
+    enabled: true
+    var.paths: ["/audit/audit.log*"]
+
+
+

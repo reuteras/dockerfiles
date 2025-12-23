@@ -1,0 +1,39 @@
+auditbeat.modules:
+
+- module: auditd
+  audit_rules: |
+    -w /etc/passwd -p wa -k identity
+    -a always,exit -F arch=b32 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+    -a always,exit -F arch=b64 -S execve,execveat -k exec
+    -a always,exit -F arch=b64 -S accept,bind,connect -F key=external-access
+    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EACCES -k access
+    -a always,exit -F arch=b64 -S open,creat,truncate,ftruncate,openat,open_by_handle_at -F exit=-EPERM -k access
+  resolve_ids: true
+  failure_mode: silent
+  backlog_limit: 8196
+  rate_limit: 0
+  include_raw_message: true
+  include_warnings: true
+
+- module: file_integrity
+  paths:
+    - /bin
+    - /usr/bin
+    - /sbin
+    - /usr/sbin
+    - /etc
+processors:
+- add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  username: '${ELASTICSEARCH_USERNAME:logstash}'
+  password: '${ELASTICSEARCH_PASSWORD:password}'
+
+setup.kibana:
+  host: "kibana:5601"
+  username: '${KIBANA_USERNAME:logstash}'
+  password: '${KIBANA_PASSWORD:password}'
+
+setup.dashboards:
+  enabled: true

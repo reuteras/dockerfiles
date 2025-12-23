@@ -1,0 +1,21 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+processors:
+- add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  username: '${ELASTICSEARCH_USERNAME:logstash}'
+  password: '${ELASTICSEARCH_PASSWORD:password}'
+
+setup.kibana:
+  host: "kibana:5601"
+  username: "logstash"
+  password: "password"
+
+setup.dashboards:
+  enabled: true
+
