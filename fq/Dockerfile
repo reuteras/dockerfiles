@@ -8,6 +8,7 @@ ARG ARCHIVE_URL=https://github.com/wader/fq/archive/
 ENV GO111MODULE on
 ENV CGO_ENABLED 0
 
+# hadolint ignore=DL3018
 RUN apk update && \
     apk add --no-cache ca-certificates curl git gcc build-base && \
     update-ca-certificates && \
