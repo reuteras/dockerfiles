@@ -4,7 +4,7 @@ Some notes and documentation from testing the ELK stack. The final goal is to fi
 
 ## RSS
 
-This is my notes and a setup scrips to test [How to leverage RSS feeds to inform the possibilities with Elastic Stack][lrf] in a fast and easy way. It's also good to look at the [GitHub][git] repository corresponding to that blog post.
+This is my notes and a setup scripts to test [How to leverage RSS feeds to inform the possibilities with Elastic Stack][lrf] in a fast and easy way. It's also good to look at the [GitHub][git] repository corresponding to that blog post.
 
 To setup the environment from scratch run.
 
