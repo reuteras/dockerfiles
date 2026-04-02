@@ -72,13 +72,6 @@ updates:
       default-days: 7
  
   - package-ecosystem: "docker"
-    directory: "/open-webui"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
- 
-  - package-ecosystem: "docker"
     directory: "/snort2suricata"
     schedule:
       interval: "weekly"
