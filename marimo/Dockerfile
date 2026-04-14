@@ -1,14 +1,14 @@
-FROM python:3.13-bookworm
+FROM python:3.14-bookworm
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
 # Install uv for fast package management
-COPY --from=ghcr.io/astral-sh/uv:0.5.6 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 RUN apt-get -y update && \
     apt-get -y install --no-install-recommends \
-        git=1:2.43.0-1.1 \
-        vim=2:9.1.0416-1+deb12u1 && \
+        git \
+        vim && \
     useradd -m marimo && \
     mkdir /data && \
     chown marimo:marimo /data && \
@@ -19,8 +19,8 @@ USER marimo
 
 RUN uv venv --seed .venv && \
     . /home/marimo/.venv/bin/activate && \
-    python3 -m pip install --no-cache-dir pip==24.3.1 && \
-    python3 -m pip install --no-cache-dir marimo==0.10.8
+    python3 -m pip install --no-cache-dir pip && \
+    python3 -m pip install --no-cache-dir marimo
 
 WORKDIR /data
 
