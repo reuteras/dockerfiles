@@ -5,6 +5,7 @@ LABEL maintainer="Coding <code@ongoing.today>"
 # Install uv for fast package management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# hadolint ignore=DL3008
 RUN apt-get -y update && \
     apt-get -y install --no-install-recommends \
         git \
@@ -17,6 +18,7 @@ RUN apt-get -y update && \
 WORKDIR /home/marimo
 USER marimo
 
+# hadolint ignore=DL3013
 RUN uv venv --seed .venv && \
     . /home/marimo/.venv/bin/activate && \
     python3 -m pip install --no-cache-dir pip && \
