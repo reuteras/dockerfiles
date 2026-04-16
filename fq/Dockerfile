@@ -10,12 +10,15 @@ ENV CGO_ENABLED 0
 
 # hadolint ignore=DL3018
 RUN apk update && \
-    apk add --no-cache ca-certificates curl git gcc build-base && \
+    apk add --no-cache \
+	build-base \
+    	ca-certificates \
+	curl \
+	git && \
     update-ca-certificates && \
-    go install github.com/wader/fq@master && \
-    rm -rf /var/cache/apk/*
+    go install github.com/wader/fq@master
 
-FROM alpine:3.21
+FROM alpine:3.23
 
 USER nobody
 

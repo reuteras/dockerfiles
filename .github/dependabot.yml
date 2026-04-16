@@ -16,13 +16,6 @@ updates:
       default-days: 7
  
   - package-ecosystem: "docker"
-    directory: "/elastic-lab"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
- 
-  - package-ecosystem: "docker"
     directory: "/flightsim"
     schedule:
       interval: "weekly"
@@ -45,13 +38,6 @@ updates:
  
   - package-ecosystem: "docker"
     directory: "/marimo"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-
-  - package-ecosystem: "docker"
-    directory: "/misp-guard"
     schedule:
       interval: "weekly"
     cooldown:

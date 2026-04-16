@@ -1,11 +1,13 @@
-FROM rust:1.83-bookworm as builder
+FROM rust:1-bullseye as builder
 WORKDIR /diff
 RUN cargo install biodiff
 
-FROM debian:bookworm-20250109-slim
+FROM debian:bullseye-slim
 WORKDIR /diff
 
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/cargo/bin/biodiff /usr/local/bin/biodiff
 

@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 LABEL maintainer="Coding <code@ongoing.today>"
 ENV DEBIAN_FRONTEND noninteractive
@@ -9,12 +9,12 @@ USER root
 
 # Install all OS dependencies for fully functional notebook server
 RUN apt-get update && apt-get install -yq --no-install-recommends \
-    ca-certificates=20250101 \
-    git=1:2.43.0-1.1 \
-    jq=1.7.1-2 \
-    less=590-2 \
-    libmagic1=1:5.46-1 \
-    tshark=4.2.4-1~deb12u1 && \
+    ca-certificates \
+    git \
+    jq \
+    less \
+    libmagic1 \
+    tshark && \
     git clone https://github.com/CERT-Polska/hfinger.git && \
     apt-get autoremove -y git ca-certificates && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 WORKDIR /hfinger
 
 RUN python3 -m venv $VIRTUAL_ENV && \
-    pip3 install --no-cache-dir setuptools==73.0.1 && \
+    pip3 install --no-cache-dir setuptools && \
     python3 setup.py install && \
     rm -rf .git && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old

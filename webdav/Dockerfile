@@ -1,16 +1,15 @@
-FROM debian:bookworm-20250109-slim
+FROM debian:bullseye-slim
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
 RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends \
-        apache2-utils=2.4.59-1 \
-        netcat-openbsd=1.10-47 \
-        nginx-extras=1.26.0-1+0~20240624.11+debian~bookworm+1~bpo12+1 && \
+        apache2-utils \
+        netcat-openbsd \
+        nginx-extras && \
     apt-get clean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get autoremove -y
 
 COPY webdav.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /

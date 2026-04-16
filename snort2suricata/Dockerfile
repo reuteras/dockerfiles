@@ -1,11 +1,12 @@
-FROM golang:1.23-alpine3.21
+FROM golang:1-alpine
 
 WORKDIR /go/src/app
 COPY convert.go .
 COPY go.mod .
 
+# hadolint ignore=DL3008
 RUN apk update && \
-    apk add --no-cache git=2.47.1-r0 && \
+    apk add --no-cache git && \
     go mod tidy && \
     go build -o convert . && \
     rm -rf /var/cache/apk/*
