@@ -1,3 +1,5 @@
+# hadolint ignore=DL3007
+# checkov:skip=CKV_DOCKER_7: zeek/zeek does not publish versioned tags
 FROM zeek/zeek:latest
 
 LABEL maintainer="Coding <code@ongoing.today>"

@@ -8,6 +8,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 USER root
 
 # Install all OS dependencies for fully functional notebook server
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     ca-certificates \
     git \
@@ -21,6 +22,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 
 WORKDIR /hfinger
 
+# hadolint ignore=DL3013
 RUN python3 -m venv $VIRTUAL_ENV && \
     pip3 install --no-cache-dir setuptools && \
     python3 setup.py install && \

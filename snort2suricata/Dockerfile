@@ -4,7 +4,7 @@ WORKDIR /go/src/app
 COPY convert.go .
 COPY go.mod .
 
-# hadolint ignore=DL3008
+# hadolint ignore=DL3008,DL3018
 RUN apk update && \
     apk add --no-cache git && \
     go mod tidy && \

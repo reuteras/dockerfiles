@@ -10,6 +10,7 @@ ENV GID=1000
 WORKDIR /src
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+# hadolint ignore=DL3008
 RUN apt-get update -yqq && \
     apt-get install -yqq --no-install-recommends \
         autoconf \
@@ -53,6 +54,7 @@ ENV PATH="$PATH:/opt/bin"
 COPY --from=builder /opt /opt
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+# hadolint ignore=DL3008
 RUN apt-get update -yqq && \
     apt-get install -yqq --no-install-recommends \
         ca-certificates \

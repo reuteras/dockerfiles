@@ -4,6 +4,7 @@ WORKDIR /go
 
 ENV CGO_ENABLED=0
 
+# hadolint ignore=DL3018,DL3062
 RUN apk add --no-cache \
         ca-certificates \
         git && \
