@@ -2,6 +2,7 @@ FROM alpine:3.23
 
 COPY upload.conf /etc/nginx/http.d/upload.conf
 
+# hadolint ignore=DL3018
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache \

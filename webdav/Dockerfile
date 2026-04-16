@@ -2,6 +2,7 @@ FROM debian:bullseye-slim
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
+# hadolint ignore=DL3008,DL3009
 RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends \
