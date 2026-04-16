@@ -36,12 +36,12 @@ updates:
     cooldown:
       default-days: 7
  
-  - package-ecosystem: "docker"
+  - package-ecosystem: "docker" # zizmor: ignore[dependabot-cooldown]
     directory: "/marimo"
     schedule:
       interval: "weekly"
-    cooldown:
-      default-days: 7
+    # cooldown omitted: Dependabot crashes (DockerRegistry2::NotFound) when
+    # applying cooldown to python:3.14-bookworm due to a Docker Hub blob 404
 
   - package-ecosystem: "docker"
     directory: "/nDPI"
