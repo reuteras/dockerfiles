@@ -1,4 +1,4 @@
-FROM zeek/zeek:8.0
+FROM zeek/zeek:8.2
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
