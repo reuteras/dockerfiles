@@ -18,7 +18,7 @@ RUN apk update && \
     update-ca-certificates && \
     go install github.com/wader/fq@master
 
-FROM alpine:3.23.4
+FROM alpine:3.24.0
 
 USER nobody
 
