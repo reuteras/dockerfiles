@@ -11,7 +11,7 @@ RUN apk add --no-cache \
     update-ca-certificates && \
     go install github.com/alphasoc/flightsim/v2@latest
 
-FROM alpine:3.24.0
+FROM alpine:3.24.1
 
 USER nobody
 
