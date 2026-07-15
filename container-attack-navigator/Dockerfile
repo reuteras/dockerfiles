@@ -1,6 +1,6 @@
 #checkov:skip=CKV_DOCKER_2
 #checkov:skip=CKV_DOCKER_3
-FROM node:24-bookworm as build-env
+FROM node:25-bookworm as build-env
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
