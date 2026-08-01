@@ -22,7 +22,7 @@ USER marimo
 RUN uv venv --seed .venv && \
     . /home/marimo/.venv/bin/activate && \
     python3 -m pip install --no-cache-dir pip && \
-    python3 -m pip install --no-cache-dir marimo
+    python3 -m pip install --no-cache-dir "marimo[recommended]"
 
 WORKDIR /data
 
