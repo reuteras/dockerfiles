@@ -1,4 +1,4 @@
-FROM python:3.14.6-slim
+FROM python:3.15.0b3-slim
 
 LABEL maintainer="Coding <code@ongoing.today>"
 ENV DEBIAN_FRONTEND noninteractive
