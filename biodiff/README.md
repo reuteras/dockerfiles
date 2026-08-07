@@ -15,7 +15,6 @@ Use the container:
     docker run --rm -it -v "$(pwd)":/diff reuteras/biodiff
     root@8289a55ce27e:/diff# biodiff file1 file2
 
-
 ## Alias
 
 Add an alias for biodiff.

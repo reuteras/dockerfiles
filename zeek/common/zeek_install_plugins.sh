@@ -34,4 +34,3 @@ ZKG_PACKAGE_NAMES=(
 for package in "${ZKG_PACKAGE_NAMES[@]}"; do
     zkg install --force --skiptests "${package}"
 done
-

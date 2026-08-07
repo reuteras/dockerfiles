@@ -33,4 +33,3 @@ RUN apt-get update --fix-missing && \
 FROM nginx:mainline-alpine
 LABEL maintainer="Coding <code@ongoing.today>"
 COPY --from=build-env /tmp/output /usr/share/nginx/html
-

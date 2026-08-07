@@ -7,5 +7,5 @@ echo "Update apt and install SysmonForLinux."
 sudo apt-get update
 sudo apt-get install sysmonforlinux
 echo "Install sysmon for Linux and reload systemd."
-sudo sysmon -accepteula -i SysmonForLinux/SysmonForLinux-CollectAll-Config.xml 
-sudo systemctl daemon-reload 
+sudo sysmon -accepteula -i SysmonForLinux/SysmonForLinux-CollectAll-Config.xml
+sudo systemctl daemon-reload

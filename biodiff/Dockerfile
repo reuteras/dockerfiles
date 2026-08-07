@@ -17,4 +17,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD /usr/local/bin/biodiff --help || exit 1
 
 CMD ["/bin/bash"]
-

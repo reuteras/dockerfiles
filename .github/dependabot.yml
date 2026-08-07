@@ -11,7 +11,7 @@ updates:
       package-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/container-attack-navigator"
     schedule:
@@ -22,7 +22,7 @@ updates:
       package-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/flightsim"
     schedule:
@@ -44,7 +44,7 @@ updates:
       package-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/hfinger"
     schedule:
@@ -55,7 +55,7 @@ updates:
       package-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker" # zizmor: ignore[dependabot-cooldown]
     directory: "/marimo"
     schedule:
@@ -77,7 +77,7 @@ updates:
       package-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/nginx"
     schedule:
@@ -88,7 +88,7 @@ updates:
       docker-nginx-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/snort2suricata"
     schedule:
@@ -99,7 +99,7 @@ updates:
       docker-snort-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "docker"
     directory: "/webdav"
     schedule:
@@ -121,7 +121,7 @@ updates:
       docker-zeek-deps:
         patterns:
           - "*"
- 
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

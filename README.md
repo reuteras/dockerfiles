@@ -19,4 +19,3 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 - [container-wise](https://github.com/reuteras/container-wise)
 - [container-zeek](https://github.com/reuteras/container-zeek)
 - [docker-rt](https://github.com/reuteras/docker-rt)
-

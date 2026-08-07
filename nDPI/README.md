@@ -19,4 +19,3 @@ Run `ndpiReader`:
 ```bash
 ndpiReader -i <pcap file> -d
 ```
-

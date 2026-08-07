@@ -18,7 +18,7 @@ RUN apt-get -y update && \
 WORKDIR /home/marimo
 USER marimo
 
-# hadolint ignore=DL3013
+# hadolint ignore=DL3013,SC1091
 RUN uv venv --seed .venv && \
     . /home/marimo/.venv/bin/activate && \
     python3 -m pip install --no-cache-dir pip && \

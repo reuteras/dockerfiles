@@ -14,7 +14,6 @@ Lastly you probably will like to disable sending data to Elastic. Open [http://l
 
 The ELK stack is running as separate containers with the help of [docker-elk][del].
 
-
 ## Auditbeat and auditd
 
 Test auditbeat with Elastic to see how it handles audit logs. Inspiration from [Monitoring Linux Audit Logs with auditd and Auditbeat][mla]. The [Auditbeat Reference][are] and [auditbeat.reference.yml][ary] example file is useful to read through.
@@ -36,7 +35,6 @@ Check logs with the following command:
 
     docker logs -f auditbeat
 
-
 ## Sysmon for Linux
 
 More information about [SysmonForLinux][sfl] and [SysinternalsEBPF][seb] can be found here:
@@ -51,7 +49,7 @@ I tested this on a VM with Ubuntu 20.04 LTS. To get started first run the set se
 
 Logs are sent to syslog by default and can be viewed as usual with **tail** and other standard Linux tools:
 
-    tail -f /var/log/syslog 
+    tail -f /var/log/syslog
 
 There is also a tool included in the package that can format the output and select the specific events (1 = ProcessCreate, 3 = NetworkConnect Detected):
 
@@ -116,8 +114,6 @@ Documentation for Filebeat and its auditd module:
 
 Add script to make it easier to test [MISP - Elastic Stack - Docker][med]
 
-
-
   [are]: https://www.elastic.co/guide/en/beats/auditbeat/current/index.html
   [ary]: https://www.elastic.co/guide/en/beats/auditbeat/current/auditbeat-reference-yml.html
   [aum]: https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-module-auditd.html
@@ -134,4 +130,3 @@ Add script to make it easier to test [MISP - Elastic Stack - Docker][med]
   [seb]: https://github.com/Sysinternals/SysinternalsEBPF
   [sfl]: https://github.com/Sysinternals/SysmonForLinux
   [slc]: https://github.com/microsoft/MSTIC-Sysmon/tree/main/linux/configs
-

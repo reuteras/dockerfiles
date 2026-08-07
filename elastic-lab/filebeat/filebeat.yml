@@ -18,4 +18,3 @@ setup.kibana:
 
 setup.dashboards:
   enabled: true
-
