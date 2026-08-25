@@ -4,7 +4,6 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 
 ## Tools in this repository
 
-- [container-attack-navigator](https://github.com/mitre-attack/attack-navigator) - MITRE ATT&CK® Navigator for offline use. Usage and more in [container-attack-navigator](./container-attack-navigator/README.md)
 - [elastic-lab](./elastic-lab/README.md) - Notes and setup scripts for testing the ELK stack, auditbeat/auditd, and Sysmon for Linux
 - [fq](https://github.com/wader/fq) - Tool, language and decoders for working with binary data. Usage and more in [fq](./fq/README.md)
 - [hfinger](https://github.com/CERT-Polska/hfinger) - Fingerprinting HTTP requests. Usage and more in [hfinger](./hfinger/README.md)
