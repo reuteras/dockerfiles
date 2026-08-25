@@ -4,18 +4,19 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 
 ## Tools in this repository
 
+- [container-attack-navigator](https://github.com/mitre-attack/attack-navigator) - MITRE ATT&CK® Navigator for offline use. Usage and more in [container-attack-navigator](./container-attack-navigator/README.md)
+- [elastic-lab](./elastic-lab/README.md) - Notes and setup scripts for testing the ELK stack, auditbeat/auditd, and Sysmon for Linux
 - [fq](https://github.com/wader/fq) - Tool, language and decoders for working with binary data. Usage and more in [fq](./fq/README.md)
-- [gollum](https://github.com/gollum/gollum) is a simple wiki system built on top of Git. Usage and more in [gollum](./gollum/README.md)
+- [hfinger](https://github.com/CERT-Polska/hfinger) - Fingerprinting HTTP requests. Usage and more in [hfinger](./hfinger/README.md)
+- [marimo](https://github.com/marimo-team/marimo) - Reactive Python notebooks. Usage and more in [marimo](./marimo/README.md)
+- [nDPI](https://github.com/ntop/nDPI) - Deep packet inspection toolkit. Usage and more in [nDPI](./nDPI/README.md)
+- [nginx](./nginx/README.md) - nginx configured with WebDAV-style upload support
+- [snort2suricata](https://github.com/google/gonids) - Converts Snort rules to Suricata rules. Usage and more in [snort2suricata](./snort2suricata/README.md)
+- [webdav](./webdav/README.md) - nginx-based WebDAV server
+- [zeek](https://github.com/zeek/zeek) - Network security monitoring platform. Usage and more in [zeek](./zeek/README.md)
 
-## Repositories for with one tool in each
+## Repositories with one tool in each
 
-- [container-alpine-network](https://github.com/reuteras/container-alpine-network)
-- [container-attack-navigator](https://github.com/reuteras/container-attack-navigator)
-- [container-attack-website](https://github.com/reuteras/container-attack-website)
-- [container-cyberchef-server](https://github.com/reuteras/container-cyberchef-server)
 - [container-notebook](https://github.com/reuteras/container-notebook)
-- [container-rt](https://github.com/reuteras/container-rt)
 - [container-vma](https://github.com/reuteras/container-vma)
 - [container-wise](https://github.com/reuteras/container-wise)
-- [container-zeek](https://github.com/reuteras/container-zeek)
-- [docker-rt](https://github.com/reuteras/docker-rt)
