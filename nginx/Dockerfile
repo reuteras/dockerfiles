@@ -1,4 +1,4 @@
-FROM alpine:3.24.1
+FROM alpine:3.24
 
 COPY upload.conf /etc/nginx/http.d/upload.conf
 

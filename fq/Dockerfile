@@ -1,4 +1,4 @@
-FROM golang:1.27rc2-alpine AS build
+FROM golang:1.27-alpine AS build
 
 WORKDIR /go/src/github.com/wader/fq
 
