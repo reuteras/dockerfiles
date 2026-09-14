@@ -32,141 +32,41 @@ An ARM64 VM is the fastest option on Apple Silicon. Some public kernel exploit
 PoCs may assume x86_64; use an emulated x86_64 VM when a particular PoC does
 not support ARM64.
 
-## Quick Start (Automated)
+## Quick Start
 
-For fastest setup, use the automated quick-start script:
+Run the automated quick-start script:
 
 ```sh
 ./quick-start.sh
 ```
 
 This script:
+
 1. Generates `.env` with random passwords
 2. Starts Elasticsearch, Kibana, and Fleet Server
-3. Automatically creates Fleet Server policy and service token
-4. Waits for all services to be healthy
-
-After quick-start completes, continue with **Create an Endpoint Policy** below.
-
-## Manual Setup
-
-### Start Elasticsearch and Kibana
-
-Generate the local configuration and random passwords from `.env.example`:
-
-```sh
-./generate-env.sh
-```
-
-The script refuses to overwrite an existing `.env` and creates it with mode
-`600`. To use different input and output paths, pass them as arguments:
-
-```sh
-./generate-env.sh .env.example .env
-```
-
-Do not commit `.env`. Save its generated passwords in your password manager,
-then start the control plane:
-
-```sh
-docker compose up -d elasticsearch setup kibana
-```
-
-Wait for Kibana to become healthy, then open <http://localhost:5601>. Sign in
-as `elastic` using `ELASTIC_PASSWORD` from `.env`.
-
-## Configure and start Fleet Server
-
-### Automated Setup (Recommended)
-
-If quick-start was not used, automate Fleet Server setup:
-
-```sh
-./setup-fleet.sh
-```
-
-This script creates a Fleet Server policy and service token, updates `.env`,
-and displays the next steps. Then start Fleet Server:
-
-```sh
-docker compose --profile fleet up -d
-```
-
-### Manual Fleet Configuration
-
-If automated setup fails or you prefer manual configuration:
-
-1. Open **Management > Fleet** in Kibana and complete initial setup.
-2. Add a Fleet Server using the advanced deployment option.
-3. Create or select the Fleet Server policy.
-4. Generate a service token and copy it.
-5. Put the generated service token in `FLEET_SERVER_SERVICE_TOKEN` in `.env`.
-6. Put the policy ID in `FLEET_SERVER_POLICY_ID` in `.env`.
-7. Start Fleet Server:
-
-```sh
-docker compose --profile fleet up -d
-```
-
-### Verify Fleet Server Status
-
-```sh
-curl http://localhost:8220/api/status
-docker compose ps
-```
-
-## Setup the Linux Endpoint
-
-### Create Endpoint Policy in Kibana
-
-1. Go to **Management > Fleet > Agent policies**
-2. Create a new policy for the Linux endpoint
-3. Add integrations:
-   - **Elastic Defend** - for threat detection
-   - **Auditd Manager** - for syscall-level visibility
+3. Creates a Fleet Server policy and service token
+4. Creates a Linux endpoint policy with Elastic Defend and Auditd Manager
+5. Generates an enrollment token for the endpoint policy
+6. Waits for all services to be healthy
+7. Prints the enrollment command for the Linux VM
 
 ### Enroll the Linux VM
 
-### Automated Enrollment (Recommended)
-
-Copy `setup-linux-vm.sh` to your Linux VM and run it:
+Copy `setup-linux-vm.sh` to your Linux VM and run it with the enrollment token
+printed by quick-start:
 
 ```sh
 sudo ./setup-linux-vm.sh --mac-ip 192.168.1.50 --fleet-token YOUR_ENROLLMENT_TOKEN
 ```
 
-This script:
-- Installs Elastic Agent from the official repository
-- Enrolls with Fleet Server automatically
-- Enables and starts the agent service
-
-### Manual Enrollment
-
-Generate the enrollment command from Kibana, replacing the Fleet URL with
-the Mac address visible to the VM:
-
-```sh
-sudo elastic-agent enroll \
-  --url=http://MAC-IP-ADDRESS:8220 \
-  --enrollment-token=YOUR_TOKEN \
-  --insecure
-```
-
-Then start the agent:
-
-```sh
-sudo systemctl enable elastic-agent
-sudo systemctl start elastic-agent
-```
-
-The `--insecure` flag is required because this isolated lab uses HTTP for
-Fleet Server.
+This installs Elastic Agent from the official repository, enrolls with Fleet
+Server, and starts the agent service.
 
 ### Install Prebuilt Detection Rules
 
 In Kibana:
 
-1. Go to **Security > Threat Intelligence > Prebuilt rules**
+1. Go to **Security > Rules > Add Elastic rules**
 2. Install the Elastic prebuilt detection rules
 3. Enable rules by filtering on tags:
    - `OS: Linux`
@@ -193,7 +93,7 @@ After reboot, verify with `uname -r` and restart the agent if needed:
 sudo systemctl restart elastic-agent
 ```
 
-## Stop or reset the lab
+## Stop or Reset the Lab
 
 Stop containers while retaining data:
 
@@ -208,6 +108,83 @@ docker compose --profile fleet down --volumes
 ```
 
 Deleting the volumes is irreversible.
+
+## Manual Setup Reference
+
+These steps are the manual equivalents of what the automated scripts do.
+Use them if the scripts fail or if you need to customize the setup.
+
+### Generate Environment File
+
+```sh
+./generate-env.sh
+```
+
+The script creates `.env` from `.env.example` with random passwords (mode
+`600`). It refuses to overwrite an existing `.env`. To use different paths:
+
+```sh
+./generate-env.sh .env.example .env
+```
+
+### Start Elasticsearch and Kibana
+
+```sh
+docker compose up -d elasticsearch setup kibana
+```
+
+Wait for Kibana to become healthy, then open <http://localhost:5601>. Sign in
+as `elastic` using `ELASTIC_PASSWORD` from `.env`.
+
+### Configure Fleet Server
+
+1. Open **Management > Fleet** in Kibana and complete initial setup.
+2. Add a Fleet Server using the advanced deployment option.
+3. Create or select the Fleet Server policy.
+4. Generate a service token and copy it.
+5. Put the generated service token in `FLEET_SERVER_SERVICE_TOKEN` in `.env`.
+6. Put the policy ID in `FLEET_SERVER_POLICY_ID` in `.env`.
+7. Start Fleet Server:
+
+```sh
+docker compose --profile fleet up -d
+```
+
+Verify Fleet Server is running:
+
+```sh
+curl http://localhost:8220/api/status
+```
+
+### Create Endpoint Policy
+
+1. Go to **Management > Fleet > Agent policies**
+2. Create a new policy for the Linux endpoint
+3. Add integrations:
+   - **Elastic Defend** - for threat detection
+   - **Auditd Manager** - for syscall-level visibility
+
+### Enroll a Linux VM Manually
+
+Generate the enrollment command from Kibana, replacing the Fleet URL with
+the Mac address visible to the VM:
+
+```sh
+sudo elastic-agent enroll \
+  --url=http://MAC-IP-ADDRESS:8220 \
+  --enrollment-token=YOUR_TOKEN \
+  --insecure
+```
+
+Then start the agent:
+
+```sh
+sudo systemctl enable elastic-agent
+sudo systemctl start elastic-agent
+```
+
+The `--insecure` flag is required because this isolated lab uses HTTP for
+Fleet Server.
 
 ## References
 
