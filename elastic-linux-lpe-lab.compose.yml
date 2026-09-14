@@ -1,0 +1,133 @@
+name: elastic-linux-lpe-lab
+
+# Minimal Elastic Security control plane for a disposable Linux endpoint VM.
+# Tested structure for Elastic Stack 9.5.3; all images use the same version.
+#
+# Start Elasticsearch + Kibana:
+#   ELASTIC_PASSWORD='replace-with-a-long-random-password' \
+#   KIBANA_PASSWORD='replace-with-another-long-random-password' \
+#   docker compose -f elastic-linux-lpe-lab.compose.yml up -d elasticsearch setup kibana
+#
+# After creating a Fleet Server policy and service token in Kibana, start Fleet:
+#   FLEET_SERVER_SERVICE_TOKEN='AAEAA...' \
+#   FLEET_SERVER_POLICY_ID='fleet-server-policy' \
+#   ELASTIC_PASSWORD='same-as-above' KIBANA_PASSWORD='same-as-above' \
+#   docker compose -f elastic-linux-lpe-lab.compose.yml --profile fleet up -d
+
+x-stack-env: &stack-env
+  ELASTIC_VERSION: ${ELASTIC_VERSION:-9.5.3}
+  ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-change-me-elastic}
+  KIBANA_PASSWORD: ${KIBANA_PASSWORD:-change-me-kibana}
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.5.3}
+    platform: linux/arm64
+    environment:
+      <<: *stack-env
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.license.self_generated.type: basic
+      bootstrap.memory_lock: "true"
+      ES_JAVA_OPTS: -Xms2g -Xmx2g
+    ports:
+      - 127.0.0.1:9200:9200
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health >/dev/null",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks: [elastic]
+
+  # Set the kibana_system password once Elasticsearch is ready. Re-running is safe.
+  setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.5.3}
+    platform: linux/arm64
+    environment:
+      <<: *stack-env
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command:
+      - /bin/bash
+      - -euc
+      - |
+        curl -fsS -u "elastic:$${ELASTIC_PASSWORD}" \
+          -H 'Content-Type: application/json' \
+          -X POST http://elasticsearch:9200/_security/user/kibana_system/_password \
+          -d "{\"password\":\"$${KIBANA_PASSWORD}\"}"
+    restart: "no"
+    networks: [elastic]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.5.3}
+    platform: linux/arm64
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: ${KIBANA_PASSWORD:-change-me-kibana}
+      SERVER_PUBLICBASEURL: http://localhost:5601
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:-change-this-to-at-least-32-characters-long}
+      TELEMETRY_OPTIN: "false"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    ports:
+      - 127.0.0.1:5601:5601
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    restart: unless-stopped
+    networks: [elastic]
+
+  fleet-server:
+    profiles: [fleet]
+    image: docker.elastic.co/elastic-agent/elastic-agent:${ELASTIC_VERSION:-9.5.3}
+    platform: linux/arm64
+    user: root
+    environment:
+      FLEET_SERVER_ENABLE: "true"
+      FLEET_SERVER_ELASTICSEARCH_HOST: http://elasticsearch:9200
+      FLEET_SERVER_SERVICE_TOKEN: ${FLEET_SERVER_SERVICE_TOKEN:-replace-me}
+      FLEET_SERVER_POLICY_ID: ${FLEET_SERVER_POLICY_ID:-fleet-server-policy}
+      FLEET_SERVER_INSECURE_HTTP: "true"
+      STATE_PATH: /state
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    ports:
+      # The Linux VM connects here. Keep the Mac and VM on an isolated lab network.
+      - 8220:8220
+    volumes:
+      - fleet-state:/state
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8220/api/status >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    restart: unless-stopped
+    networks: [elastic]
+
+volumes:
+  es-data:
+  fleet-state:
+
+networks:
+  elastic:
+    driver: bridge
