@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
 #
 # Quick-start automation for elastic-linux-lpe-lab.
-# Automates the complete setup of Elasticsearch, Kibana, and Fleet Server.
+# Automates the complete setup of Elasticsearch, Kibana, Fleet Server,
+# endpoint policy with Elastic Defend and Auditd Manager, and enrollment
+# token generation.
 #
 # Usage: ./quick-start.sh
 #
-# This script:
-# 1. Generates .env with random passwords
-# 2. Starts Elasticsearch, setup service, and Kibana
-# 3. Verifies Elasticsearch and Kibana are healthy via their APIs
-# 4. Attempts to create Fleet Server policy and service token via API
-# 5. Starts Fleet Server and verifies it is healthy
-#
-# After running this, you still need to:
-# - Create an endpoint policy in Kibana
-# - Enroll a Linux VM with the generated enrollment token
+# After running this, copy setup-linux-vm.sh to your Linux VM and enroll
+# it using the printed enrollment command.
 
 set -euo pipefail
 
@@ -88,40 +82,33 @@ printf '  URL: %s\n' "$KIBANA_HOST"
 printf '  Username: elastic\n'
 printf '  Password: (see .env)\n\n'
 
-# Step 4: Attempt automated Fleet Server setup
-printf 'Step 4: Setting up Fleet Server...\n'
-if command -v curl >/dev/null 2>&1; then
-  if ./setup-fleet.sh; then
-    # Re-source .env to pick up the Fleet Server token and policy ID
-    # shellcheck source=/dev/null
-    source .env
-    printf 'Fleet Server configured automatically.\n\n'
+# Step 4: Fleet Server + endpoint policy + enrollment token
+printf 'Step 4: Setting up Fleet Server and endpoint policy...\n'
+if ./setup-fleet.sh; then
+  # Re-source .env to pick up the Fleet Server token and policy ID
+  # shellcheck source=/dev/null
+  source .env
 
-    # Step 5: Start Fleet Server and verify it is healthy
-    printf 'Step 5: Starting Fleet Server...\n'
-    docker compose --profile fleet up -d
+  # Step 5: Start Fleet Server and verify it is healthy
+  printf 'Step 5: Starting Fleet Server...\n'
+  docker compose --profile fleet up -d
 
-    printf 'Waiting for Fleet Server...\n'
-    if wait_for_url "${FLEET_HOST}/api/status" "" "Fleet Server" 90; then
-      fleet_status=$(curl -fsS --max-time 5 "${FLEET_HOST}/api/status" 2>/dev/null \
-        | grep -o '"status":"[^"]*' | head -1 | cut -d'"' -f4)
-      printf 'Fleet Server is ready (status: %s).\n\n' "${fleet_status:-unknown}"
-    else
-      printf 'Warning: Fleet Server did not become healthy in time.\n'
-      printf 'Check logs with: docker compose logs fleet-server\n\n'
-    fi
+  printf 'Waiting for Fleet Server...\n'
+  if wait_for_url "${FLEET_HOST}/api/status" "" "Fleet Server" 90; then
+    fleet_status=$(curl -fsS --max-time 5 "${FLEET_HOST}/api/status" 2>/dev/null \
+      | grep -o '"status":"[^"]*' | head -1 | cut -d'"' -f4)
+    printf 'Fleet Server is ready (status: %s).\n\n' "${fleet_status:-unknown}"
   else
-    printf 'Automated Fleet setup failed. Manual configuration needed.\n'
-    printf 'See README.md for manual setup steps.\n\n'
+    printf 'Warning: Fleet Server did not become healthy in time.\n'
+    printf 'Check logs with: docker compose logs fleet-server\n\n'
   fi
 else
-  printf 'curl not found. Manual Fleet Server setup required.\n'
-  printf 'See README.md for setup steps.\n\n'
+  printf 'Automated Fleet setup failed. See README.md for manual steps.\n\n'
 fi
 
-printf '=== Setup Complete ===\n'
+printf '=== Setup Complete ===\n\n'
 printf 'Next steps:\n'
 printf '1. Open Kibana at %s\n' "$KIBANA_HOST"
-printf '2. Create an endpoint policy in Fleet for the Linux VM\n'
-printf '3. Generate enrollment token and enroll your Linux VM\n'
-printf '4. Run setup-linux-vm.sh on the Linux VM to install Elastic Agent\n'
+printf '2. Copy setup-linux-vm.sh to your Linux VM\n'
+printf '3. Enroll the VM using the enrollment command printed above\n'
+printf '4. Install prebuilt detection rules in Kibana (Security > Rules > Add Elastic rules)\n'
