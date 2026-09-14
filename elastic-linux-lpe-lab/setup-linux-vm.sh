@@ -35,89 +35,13 @@ Environment variables:
 EOF
 }
 
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --kernel)
-      KERNEL_VERSION="$2"
-      shift 2
-      ;;
-    --mac-ip)
-      MAC_IP="$2"
-      shift 2
-      ;;
-    --fleet-token)
-      FLEET_ENROLLMENT_TOKEN="$2"
-      shift 2
-      ;;
-    --help)
-      print_help
-      exit 0
-      ;;
-    *)
-      printf 'Unknown option: %s\n' "$1" >&2
-      print_help
-      exit 1
-      ;;
-  esac
-done
-
-printf '=== elastic-linux-lpe-lab: Linux VM Setup ===\n\n'
-
-# Check if running as root
-if [[ $EUID -ne 0 ]]; then
-  printf 'This script must be run as root.\n' >&2
-  exit 1
-fi
-
-# Detect OS
-if [[ ! -f /etc/os-release ]]; then
-  printf 'Error: Unable to detect OS.\n' >&2
-  exit 1
-fi
-
-# shellcheck source=/dev/null
-source /etc/os-release
-
-# Ensure we're on Debian/Ubuntu
-if [[ "$ID" != "debian" && "$ID" != "ubuntu" ]]; then
-  printf 'Warning: This script is optimized for Debian/Ubuntu. Detected: %s\n' "$ID"
-fi
-
-printf 'Detected OS: %s %s (%s)\n' "$NAME" "$VERSION_ID" "$(dpkg --print-architecture)"
-
-# Update package lists
-printf '\nUpdating package lists...\n'
-apt-get update -qq
-
-# Kernel installation
-if [[ -n "$KERNEL_VERSION" ]]; then
-  printf '\n=== Kernel Installation ===\n'
-  install_kernel "$KERNEL_VERSION"
-fi
-
-# Install Elastic Agent
-printf '\n=== Installing Elastic Agent ===\n'
-install_elastic_agent
-
-# Generate enrollment command
-if [[ -n "$MAC_IP" && -n "$FLEET_ENROLLMENT_TOKEN" ]]; then
-  printf '\n=== Enrolling with Fleet Server ===\n'
-  enroll_agent "$MAC_IP" "$FLEET_ENROLLMENT_TOKEN"
-fi
-
-printf '\n=== Setup Complete ===\n'
-printf 'Elastic Agent status: '
-systemctl is-active elastic-agent || printf 'not running (enable with: sudo systemctl start elastic-agent)\n'
-
 install_kernel() {
   local kernel_version="$1"
 
   printf 'Installing kernel version: %s\n' "$kernel_version"
 
-  # For arm64 Debian Trixie, install from debian.org kernel packages
-  # Kernels from April 2026 would be in the backports repo
-
-  local arch=$(dpkg --print-architecture)
+  local arch
+  arch=$(dpkg --print-architecture)
   if [[ "$arch" != "arm64" ]]; then
     printf 'Warning: This system is %s, not arm64. Kernel installation may differ.\n' "$arch"
   fi
@@ -194,6 +118,80 @@ enroll_agent() {
   printf 'Checking agent status...\n'
   systemctl status elastic-agent || true
 }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --kernel)
+      KERNEL_VERSION="$2"
+      shift 2
+      ;;
+    --mac-ip)
+      MAC_IP="$2"
+      shift 2
+      ;;
+    --fleet-token)
+      FLEET_ENROLLMENT_TOKEN="$2"
+      shift 2
+      ;;
+    --help)
+      print_help
+      exit 0
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$1" >&2
+      print_help
+      exit 1
+      ;;
+  esac
+done
+
+printf '=== elastic-linux-lpe-lab: Linux VM Setup ===\n\n'
+
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+  printf 'This script must be run as root.\n' >&2
+  exit 1
+fi
+
+# Detect OS
+if [[ ! -f /etc/os-release ]]; then
+  printf 'Error: Unable to detect OS.\n' >&2
+  exit 1
+fi
+
+# shellcheck source=/dev/null
+source /etc/os-release
+
+# Ensure we're on Debian/Ubuntu
+if [[ "$ID" != "debian" && "$ID" != "ubuntu" ]]; then
+  printf 'Warning: This script is optimized for Debian/Ubuntu. Detected: %s\n' "$ID"
+fi
+
+printf 'Detected OS: %s %s (%s)\n' "$NAME" "$VERSION_ID" "$(dpkg --print-architecture)"
+
+# Update package lists
+printf '\nUpdating package lists...\n'
+apt-get update -qq
+
+# Kernel installation
+if [[ -n "$KERNEL_VERSION" ]]; then
+  printf '\n=== Kernel Installation ===\n'
+  install_kernel "$KERNEL_VERSION"
+fi
+
+# Install Elastic Agent
+printf '\n=== Installing Elastic Agent ===\n'
+install_elastic_agent
+
+# Generate enrollment command
+if [[ -n "$MAC_IP" && -n "$FLEET_ENROLLMENT_TOKEN" ]]; then
+  printf '\n=== Enrolling with Fleet Server ===\n'
+  enroll_agent "$MAC_IP" "$FLEET_ENROLLMENT_TOKEN"
+fi
+
+printf '\n=== Setup Complete ===\n'
+printf 'Elastic Agent status: '
+systemctl is-active elastic-agent || printf 'not running (enable with: sudo systemctl start elastic-agent)\n'
 
 printf '\nNote: If you did not provide --mac-ip and --fleet-token,\n'
 printf 'you can enroll the agent later using:\n'

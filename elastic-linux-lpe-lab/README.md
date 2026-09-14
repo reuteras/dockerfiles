@@ -92,7 +92,7 @@ and displays the next steps. Then start Fleet Server:
 docker compose --profile fleet up -d
 ```
 
-### Manual Setup
+### Manual Fleet Configuration
 
 If automated setup fails or you prefer manual configuration:
 
@@ -127,7 +127,7 @@ docker compose ps
 
 ### Enroll the Linux VM
 
-### Automated Setup (Recommended)
+### Automated Enrollment (Recommended)
 
 Copy `setup-linux-vm.sh` to your Linux VM and run it:
 
@@ -176,119 +176,18 @@ Auditd Manager provides the syscall-level visibility used by the research,
 including `socket`, `splice`, `bind`, and `execve`. Follow the article's linked
 audit rules for the specific page-cache tests.
 
-## Install a Specific Kernel on arm64 Debian Trixie
+## Install a Vulnerable Kernel (DSA-6162-1)
 
-Some LPE exploits target specific kernel versions. For testing with a kernel
-from early April 2026 on ARM64 Debian Trixie:
-
-### Using setup-linux-vm.sh (Automated)
-
-```sh
-sudo ./setup-linux-vm.sh --kernel 6.7 --mac-ip 192.168.1.50
-```
-
-Replace `6.7` with your target kernel version.
-
-### Manual Kernel Installation
-
-#### Install from Debian Repositories
-
-For recent kernels available in Debian:
+DSA-6162-1 addresses AppArmor privilege-escalation vulnerabilities fixed in
+linux 6.12.74-2. To install the pre-fix kernel on an arm64 Debian Trixie VM:
 
 ```sh
 sudo apt update
-sudo apt install -y linux-image-arm64
-```
-
-To install a specific kernel version:
-
-```sh
-# Search for available versions
-apt-cache search linux-image | grep arm64
-
-# Install specific version (e.g., 6.7)
-sudo apt install -y linux-image-6.7-arm64
-```
-
-#### Install from Debian Backports
-
-For kernels in testing or backports:
-
-```sh
-echo "deb http://deb.debian.org/debian trixie-backports main contrib non-free" \
-  | sudo tee /etc/apt/sources.list.d/backports.list
-
-sudo apt update
-sudo apt install -y -t trixie-backports linux-image-arm64
-```
-
-#### Install from Kernel Snapshot (April 2026)
-
-For a specific snapshot from April 2026, use snapshot.debian.org:
-
-```sh
-# Example: April 15, 2026 (20260415)
-echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20260415 trixie main" \
-  | sudo tee /etc/apt/sources.list.d/snapshot.list
-
-sudo apt update
-sudo apt install -y linux-image-arm64
-```
-
-Replace `20260415` with your target date (YYYYMMDD format).
-
-#### Compile from Source
-
-For maximum control, build from the Linux kernel source tree:
-
-```sh
-# Install build dependencies
-sudo apt install -y build-essential libncurses-dev bison flex libssl-dev libelf-dev
-
-# Clone kernel repository and checkout desired date
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-cd linux
-git log --oneline --all --date=short --pretty=format:"%h %ad %s" | grep "2026-04"
-git checkout <COMMIT_HASH>
-
-# Configure with Debian defaults or custom config
-cp /boot/config-$(uname -r) .config
-# Or use defconfig:
-make defconfig
-
-# Build and install
-make -j$(nproc)
-sudo make install
-sudo make modules_install
-```
-
-#### After Kernel Installation
-
-Update the bootloader and reboot:
-
-```sh
-sudo update-grub
+sudo apt install -y linux-image-6.12.74-1-arm64
 sudo reboot
 ```
 
-After reboot, verify the new kernel:
-
-```sh
-uname -r
-uname -m  # Should show 'aarch64'
-```
-
-### Verify Elastic Agent Functionality
-
-After installing a new kernel and rebooting, verify that Elastic Agent and
-Auditd Manager are still functioning:
-
-```sh
-sudo systemctl status elastic-agent
-sudo auditctl -l  # Check if audit rules are active
-```
-
-If the agent is down, restart it:
+After reboot, verify with `uname -r` and restart the agent if needed:
 
 ```sh
 sudo systemctl restart elastic-agent
