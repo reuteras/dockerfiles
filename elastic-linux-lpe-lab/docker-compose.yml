@@ -37,10 +37,11 @@ services:
       - es-data:/usr/share/elasticsearch/data
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "curl -fsS -u elastic:$${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health >/dev/null",
-        ]
+        - CMD-SHELL
+        - |
+          credentials="elastic:$${ELASTIC_PASSWORD}"
+          curl -fsS -u "$${credentials}" \
+            http://localhost:9200/_cluster/health >/dev/null
       interval: 10s
       timeout: 5s
       retries: 30
@@ -64,7 +65,8 @@ services:
       - /bin/bash
       - -euc
       - |
-        curl -fsS -u "elastic:$${ELASTIC_PASSWORD}" \
+        credentials="elastic:$${ELASTIC_PASSWORD}"
+        curl -fsS -u "$${credentials}" \
           -H 'Content-Type: application/json' \
           -X POST http://elasticsearch:9200/_security/user/kibana_system/_password \
           -d "{\"password\":\"$${KIBANA_PASSWORD}\"}"
