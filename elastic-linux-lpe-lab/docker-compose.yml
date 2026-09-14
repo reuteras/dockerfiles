@@ -6,13 +6,13 @@ name: elastic-linux-lpe-lab
 # Start Elasticsearch + Kibana:
 #   ELASTIC_PASSWORD='replace-with-a-long-random-password' \
 #   KIBANA_PASSWORD='replace-with-another-long-random-password' \
-#   docker compose -f elastic-linux-lpe-lab.compose.yml up -d elasticsearch setup kibana
+#   docker compose up -d elasticsearch setup kibana
 #
 # After creating a Fleet Server policy and service token in Kibana, start Fleet:
 #   FLEET_SERVER_SERVICE_TOKEN='AAEAA...' \
 #   FLEET_SERVER_POLICY_ID='fleet-server-policy' \
 #   ELASTIC_PASSWORD='same-as-above' KIBANA_PASSWORD='same-as-above' \
-#   docker compose -f elastic-linux-lpe-lab.compose.yml --profile fleet up -d
+#   docker compose --profile fleet up -d
 
 x-stack-env: &stack-env
   ELASTIC_VERSION: ${ELASTIC_VERSION:-9.5.3}

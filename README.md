@@ -5,6 +5,7 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 ## Tools in this repository
 
 - [elastic-lab](./elastic-lab/README.md) - Notes and setup scripts for testing the ELK stack, auditbeat/auditd, and Sysmon for Linux
+- [elastic-linux-lpe-lab](./elastic-linux-lpe-lab/README.md) - Elastic Security, Fleet, Elastic Defend, and Auditd lab for Linux privilege-escalation detection testing
 - [fq](https://github.com/wader/fq) - Tool, language and decoders for working with binary data. Usage and more in [fq](./fq/README.md)
 - [hfinger](https://github.com/CERT-Polska/hfinger) - Fingerprinting HTTP requests. Usage and more in [hfinger](./hfinger/README.md)
 - [marimo](https://github.com/marimo-team/marimo) - Reactive Python notebooks. Usage and more in [marimo](./marimo/README.md)
