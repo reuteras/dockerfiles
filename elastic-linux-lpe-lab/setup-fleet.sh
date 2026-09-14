@@ -24,7 +24,6 @@ fi
 source "$ENV_FILE"
 
 ELASTIC_USER="elastic"
-KIBANA_USER="kibana_system"
 
 printf '=== Elastic Fleet Server Automation Setup ===\n\n'
 
