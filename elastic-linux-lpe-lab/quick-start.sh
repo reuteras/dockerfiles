@@ -18,6 +18,8 @@ cd "$SCRIPT_DIR"
 ELASTIC_HOST="${ELASTIC_HOST:-http://localhost:9200}"
 KIBANA_HOST="${KIBANA_HOST:-http://localhost:5601}"
 FLEET_HOST="${FLEET_HOST:-http://localhost:8220}"
+ENV_FILE=".env"
+ELASTIC_USER="elastic"
 
 wait_for_url() {
   local url="$1" auth="${2:-}" label="$3" max_attempts="${4:-60}"
@@ -38,10 +40,17 @@ wait_for_url() {
   return 1
 }
 
+kibana_api() {
+  curl -fsS -u "${ELASTIC_USER}:${ELASTIC_PASSWORD}" \
+    -H 'Content-Type: application/json' \
+    -H 'kbn-xsrf: true' \
+    "$@"
+}
+
 printf '=== Elastic Linux LPE Lab - Quick Start ===\n\n'
 
 # Step 1: Generate .env if it doesn't exist
-if [[ ! -f .env ]]; then
+if [[ ! -f "$ENV_FILE" ]]; then
   printf 'Step 1: Generating .env with random passwords...\n'
   ./generate-env.sh
   printf 'Created .env with secure random passwords.\n\n'
@@ -50,13 +59,13 @@ else
 fi
 
 # shellcheck source=/dev/null
-source .env
+source "$ENV_FILE"
 
 # Step 2: Start Elasticsearch, setup, and Kibana
 printf 'Step 2: Starting Elasticsearch and Kibana...\n'
 docker compose up -d elasticsearch setup kibana
 
-# Step 3: Verify services via their APIs
+# Step 3: Verify Elasticsearch and Kibana are healthy
 printf '\nStep 3: Verifying services are healthy...\n'
 
 printf 'Waiting for Elasticsearch...\n'
@@ -82,33 +91,186 @@ printf '  URL: %s\n' "$KIBANA_HOST"
 printf '  Username: elastic\n'
 printf '  Password: (see .env)\n\n'
 
-# Step 4: Fleet Server + endpoint policy + enrollment token
-printf 'Step 4: Setting up Fleet Server and endpoint policy...\n'
-if ./setup-fleet.sh; then
-  # Re-source .env to pick up the Fleet Server token and policy ID
-  # shellcheck source=/dev/null
-  source .env
+# Step 4: Create Fleet Server policy and service token
+printf 'Step 4: Creating Fleet Server policy...\n'
 
-  # Step 5: Start Fleet Server and verify it is healthy
-  printf 'Step 5: Starting Fleet Server...\n'
-  docker compose --profile fleet up -d
+fleet_policy_response=$(kibana_api \
+  -X POST "$KIBANA_HOST/api/fleet/agent_policies?sys_monitoring=true" \
+  -d '{
+    "name": "fleet-server-policy",
+    "description": "Policy for Fleet Server",
+    "namespace": "default",
+    "monitoring_enabled": ["logs", "metrics"],
+    "agent_features": []
+  }')
 
-  printf 'Waiting for Fleet Server...\n'
-  if wait_for_url "${FLEET_HOST}/api/status" "" "Fleet Server" 90; then
-    fleet_status=$(curl -fsS --max-time 5 "${FLEET_HOST}/api/status" 2>/dev/null \
-      | grep -o '"status":"[^"]*' | head -1 | cut -d'"' -f4)
-    printf 'Fleet Server is ready (status: %s).\n\n' "${fleet_status:-unknown}"
-  else
-    printf 'Warning: Fleet Server did not become healthy in time.\n'
-    printf 'Check logs with: docker compose logs fleet-server\n\n'
-  fi
-else
-  printf 'Automated Fleet setup failed. See README.md for manual steps.\n\n'
+fleet_policy_id=$(echo "$fleet_policy_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+if [[ -z "$fleet_policy_id" ]]; then
+  printf 'Error: Failed to create Fleet Server policy.\n' >&2
+  printf 'Response: %s\n' "$fleet_policy_response" >&2
+  exit 1
 fi
 
+printf 'Fleet Server policy created: %s\n' "$fleet_policy_id"
+
+printf 'Generating Fleet Server service token...\n'
+token_response=$(curl -fsS -u "${ELASTIC_USER}:${ELASTIC_PASSWORD}" \
+  -H 'Content-Type: application/json' \
+  -X POST "${ELASTIC_HOST}/_security/service/elastic/fleet-server/credential/http/token" \
+  -d '{"grant_type": "client_credentials"}')
+
+fleet_service_token=$(echo "$token_response" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+if [[ -z "$fleet_service_token" ]]; then
+  printf 'Error: Failed to generate service token.\n' >&2
+  printf 'Response: %s\n' "$token_response" >&2
+  exit 1
+fi
+
+printf 'Service token generated.\n'
+
+sed -i.bak \
+  -e "s/^FLEET_SERVER_POLICY_ID=.*/FLEET_SERVER_POLICY_ID=$fleet_policy_id/" \
+  -e "s/^FLEET_SERVER_SERVICE_TOKEN=.*/FLEET_SERVER_SERVICE_TOKEN=$fleet_service_token/" \
+  "$ENV_FILE"
+
+# Re-source to pick up the new values
+# shellcheck source=/dev/null
+source "$ENV_FILE"
+printf '.env updated with Fleet Server configuration.\n\n'
+
+# Step 5: Start Fleet Server and verify it is healthy
+printf 'Step 5: Starting Fleet Server...\n'
+docker compose --profile fleet up -d
+
+printf 'Waiting for Fleet Server...\n'
+if wait_for_url "${FLEET_HOST}/api/status" "" "Fleet Server" 90; then
+  fleet_status=$(curl -fsS --max-time 5 "${FLEET_HOST}/api/status" 2>/dev/null \
+    | grep -o '"status":"[^"]*' | head -1 | cut -d'"' -f4)
+  printf 'Fleet Server is ready (status: %s).\n\n' "${fleet_status:-unknown}"
+else
+  printf 'Warning: Fleet Server did not become healthy in time.\n'
+  printf 'Check logs with: docker compose logs fleet-server\n\n'
+fi
+
+# Step 6: Create Linux endpoint policy with integrations
+printf 'Step 6: Creating Linux endpoint policy...\n'
+
+endpoint_policy_response=$(kibana_api \
+  -X POST "$KIBANA_HOST/api/fleet/agent_policies?sys_monitoring=true" \
+  -d '{
+    "name": "linux-lpe-endpoint",
+    "description": "Linux endpoint policy with Elastic Defend and Auditd Manager",
+    "namespace": "default",
+    "monitoring_enabled": ["logs", "metrics"],
+    "agent_features": []
+  }')
+
+endpoint_policy_id=$(echo "$endpoint_policy_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+if [[ -z "$endpoint_policy_id" ]]; then
+  printf 'Error: Failed to create endpoint policy.\n' >&2
+  printf 'Response: %s\n' "$endpoint_policy_response" >&2
+  exit 1
+fi
+
+printf 'Endpoint policy created: %s\n' "$endpoint_policy_id"
+
+printf 'Adding Elastic Defend integration...\n'
+defend_response=$(kibana_api \
+  -X POST "$KIBANA_HOST/api/fleet/package_policies" \
+  -d "{
+    \"name\": \"Elastic Defend - LPE Lab\",
+    \"namespace\": \"default\",
+    \"policy_id\": \"$endpoint_policy_id\",
+    \"package\": {
+      \"name\": \"endpoint\",
+      \"title\": \"Elastic Defend\",
+      \"version\": \"\"
+    },
+    \"inputs\": {
+      \"endpoint-endpoint\": {
+        \"enabled\": true,
+        \"streams\": {},
+        \"vars\": {}
+      }
+    }
+  }")
+
+defend_id=$(echo "$defend_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+if [[ -z "$defend_id" ]]; then
+  printf 'Warning: Elastic Defend integration may need manual setup.\n'
+  printf 'Response: %s\n' "$defend_response"
+else
+  printf 'Elastic Defend added.\n'
+fi
+
+printf 'Adding Auditd Manager integration...\n'
+auditd_response=$(kibana_api \
+  -X POST "$KIBANA_HOST/api/fleet/package_policies" \
+  -d "{
+    \"name\": \"Auditd Manager - LPE Lab\",
+    \"namespace\": \"default\",
+    \"policy_id\": \"$endpoint_policy_id\",
+    \"package\": {
+      \"name\": \"auditd_manager\",
+      \"title\": \"Auditd Manager\",
+      \"version\": \"\"
+    },
+    \"inputs\": {
+      \"audit-audit/auditd\": {
+        \"enabled\": true,
+        \"streams\": {},
+        \"vars\": {}
+      }
+    }
+  }")
+
+auditd_id=$(echo "$auditd_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+
+if [[ -z "$auditd_id" ]]; then
+  printf 'Warning: Auditd Manager integration may need manual setup.\n'
+  printf 'Response: %s\n' "$auditd_response"
+else
+  printf 'Auditd Manager added.\n'
+fi
+
+# Step 7: Generate enrollment token
+printf '\nStep 7: Generating enrollment token...\n'
+
+enrollment_response=$(kibana_api \
+  -X POST "$KIBANA_HOST/api/fleet/enrollment_api_keys" \
+  -d "{\"policy_id\": \"$endpoint_policy_id\"}")
+
+enrollment_token=$(echo "$enrollment_response" | grep -o '"api_key":"[^"]*' | cut -d'"' -f4)
+
+if [[ -z "$enrollment_token" ]]; then
+  printf 'Warning: Could not generate enrollment token.\n'
+  printf 'Response: %s\n' "$enrollment_response"
+  printf 'Generate one manually in Kibana under Management > Fleet > Enrollment tokens.\n\n'
+else
+  printf 'Enrollment token generated.\n\n'
+fi
+
+# Summary
 printf '=== Setup Complete ===\n\n'
-printf 'Next steps:\n'
-printf '1. Open Kibana at %s\n' "$KIBANA_HOST"
-printf '2. Copy setup-linux-vm.sh to your Linux VM\n'
-printf '3. Enroll the VM using the enrollment command printed above\n'
-printf '4. Install prebuilt detection rules in Kibana (Security > Rules > Add Elastic rules)\n'
+printf 'Kibana: %s (user: elastic, password in .env)\n' "$KIBANA_HOST"
+printf 'Fleet Server: %s\n' "$FLEET_HOST"
+printf 'Endpoint policy: linux-lpe-endpoint'
+if [[ -n "${defend_id:-}" ]]; then
+  printf ' + Elastic Defend'
+fi
+if [[ -n "${auditd_id:-}" ]]; then
+  printf ' + Auditd Manager'
+fi
+printf '\n\n'
+
+if [[ -n "${enrollment_token:-}" ]]; then
+  printf 'Enroll your Linux VM with:\n'
+  printf '  sudo ./setup-linux-vm.sh --mac-ip YOUR_MAC_IP --fleet-token %s\n\n' "$enrollment_token"
+fi
+
+printf 'After enrollment, install prebuilt detection rules in Kibana:\n'
+printf '  Security > Rules > Add Elastic rules\n'
