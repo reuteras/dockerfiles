@@ -92,7 +92,7 @@ and displays the next steps. Then start Fleet Server:
 docker compose --profile fleet up -d
 ```
 
-### Manual Setup
+### Manual Fleet Configuration
 
 If automated setup fails or you prefer manual configuration:
 
@@ -127,7 +127,7 @@ docker compose ps
 
 ### Enroll the Linux VM
 
-### Automated Setup (Recommended)
+### Automated Enrollment (Recommended)
 
 Copy `setup-linux-vm.sh` to your Linux VM and run it:
 
