@@ -33,21 +33,21 @@ not support ARM64.
 
 ## Start Elasticsearch and Kibana
 
-Create the local configuration:
+Generate the local configuration and random passwords from `.env.example`:
 
 ```sh
-cp .env.example .env
+./generate-env.sh
 ```
 
-Generate secrets and replace the corresponding values in `.env`:
+The script refuses to overwrite an existing `.env` and creates it with mode
+`600`. To use different input and output paths, pass them as arguments:
 
 ```sh
-openssl rand -hex 24
-openssl rand -hex 24
-openssl rand -hex 32
+./generate-env.sh .env.example .env
 ```
 
-Do not commit `.env`. Start the control plane:
+Do not commit `.env`. Save its generated passwords in your password manager,
+then start the control plane:
 
 ```sh
 docker compose up -d elasticsearch setup kibana
