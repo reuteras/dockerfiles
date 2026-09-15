@@ -33,6 +33,25 @@ detect_apt_ipv6() {
   fi
 }
 
+# apt's own Acquire::Retries retries back-to-back with no real delay, which
+# doesn't help against a WAF block that has been observed to hold for 10+
+# seconds even under a slow, spaced-out request rate. Retry the whole
+# command with exponential backoff (5s/10s/20s/40s/60s) instead.
+retry_with_backoff() {
+  local label="$1" max_attempts="$2"; shift 2
+  local attempt=1 delay=5
+  until "$@"; do
+    if (( attempt >= max_attempts )); then
+      return 1
+    fi
+    printf '  %s: attempt %d/%d failed, retrying in %ds...\n' \
+      "$label" "$attempt" "$max_attempts" "$delay" >&2
+    sleep "$delay"
+    delay=$(( delay * 2 < 60 ? delay * 2 : 60 ))
+    (( attempt++ ))
+  done
+}
+
 KERNEL_VERSION=""
 MAC_IP=""
 FLEET_HOST="${FLEET_HOST:-}"
@@ -123,10 +142,12 @@ install_elastic_agent() {
   echo "deb [signed-by=/usr/share/keyrings/elastic-agents-archive-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" \
     > /etc/apt/sources.list.d/elastic-agents.list
 
-  apt-get "${APT_ELASTIC_OPTS[@]}" update -qq
+  retry_with_backoff "apt-get update" 6 \
+    apt-get "${APT_ELASTIC_OPTS[@]}" update -qq
 
   printf 'Installing Elastic Agent...\n'
-  apt-get "${APT_ELASTIC_OPTS[@]}" install -y -qq elastic-agent
+  retry_with_backoff "apt-get install elastic-agent" 6 \
+    apt-get "${APT_ELASTIC_OPTS[@]}" install -y -qq elastic-agent
 
   printf 'Elastic Agent installed successfully.\n'
 }
