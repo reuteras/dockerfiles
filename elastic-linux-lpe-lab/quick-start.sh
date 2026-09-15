@@ -419,6 +419,52 @@ if [[ -z "$defend_id" ]]; then
   printf 'Response: %s\n' "$defend_response"
 else
   printf 'Elastic Defend added.\n'
+
+  # Elastic Defend defaults malware/behavior/memory protection to "off" --
+  # collection-only, no alerts, regardless of what happens on the endpoint.
+  # That defeats the point of a detection lab, so turn them on ("detect",
+  # not "prevent": this is for learning/observing, not blocking). The
+  # config is a large nested blob under inputs[].config.policy.value with
+  # no simple per-field API, so round-trip it through python3 rather than
+  # risk a blind sed across a JSON structure with many unrelated "mode"
+  # fields.
+  if command -v python3 >/dev/null 2>&1; then
+    defend_policy_full=$(kibana_api "$KIBANA_HOST/api/fleet/package_policies?kuery=ingest-package-policies.package.name:%22endpoint%22")
+    defend_update_body=$(echo "$defend_policy_full" | python3 -c '
+import json, sys
+item = json.load(sys.stdin)["items"][0]
+value = item["inputs"][0]["config"]["policy"]["value"]
+for feature in ("malware", "behavior_protection", "memory_protection"):
+    value["linux"][feature]["mode"] = "detect"
+body = {
+    "name": item["name"],
+    "namespace": item["namespace"],
+    "policy_id": item["policy_id"],
+    "package": item["package"],
+    "inputs": item["inputs"],
+}
+print(json.dumps(body))
+' 2>/dev/null || true)
+    if [[ -n "$defend_update_body" ]]; then
+      defend_update_response=$(kibana_api -X PUT "$KIBANA_HOST/api/fleet/package_policies/$defend_id" -d "$defend_update_body" || true)
+      if echo "$defend_update_response" | grep -q '"mode":"detect"'; then
+        printf 'Elastic Defend malware/behavior/memory protection enabled (detect mode).\n'
+      else
+        printf 'Warning: Could not enable Elastic Defend protection automatically.\n'
+        printf 'Response: %s\n' "$defend_update_response"
+      fi
+    else
+      printf 'Warning: Could not read back Elastic Defend policy to enable protection.\n'
+    fi
+  else
+    printf 'Warning: python3 not found; Elastic Defend malware/behavior/memory protection are left off.\n'
+  fi
+  if [[ -z "${defend_update_response:-}" ]] || ! echo "${defend_update_response:-}" | grep -q '"mode":"detect"'; then
+    printf 'Enable manually in Kibana: Fleet > Agent policies > linux-lpe-endpoint >\n'
+    printf '"Elastic Defend - LPE Lab" > edit, set Malware, Malicious Behavior, and\n'
+    printf 'Memory Threat protection to at least "Detect".\n'
+  fi
+  printf '\n'
 fi
 
 printf 'Adding Auditd Manager integration...\n'
