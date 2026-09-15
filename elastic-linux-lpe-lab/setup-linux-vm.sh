@@ -85,7 +85,13 @@ install_elastic_agent() {
   apt-get install -y -qq curl gpg
 
   printf 'Downloading Elastic Agent signing key...\n'
-  curl -fsS https://artifacts.elastic.co/GPG-KEY-elastic-agent | gpg --dearmor \
+  # Same signing key (fingerprint 46095ACC8548582C1A2699A9D27D666CD88E42B4)
+  # as GPG-KEY-elastic-agent, but re-certified in 2023 with a SHA-256
+  # self-signature instead of the original 2013 SHA-1 one. Debian
+  # trixie's default apt verifier (sqv) rejects SHA-1-bound keys as of
+  # 2026-02-01, so GPG-KEY-elastic-agent fails "not bound" verification
+  # there even though it signs this exact repository.
+  curl -fsS https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor \
     > /usr/share/keyrings/elastic-agents-archive-keyring.gpg
 
   printf 'Adding Elastic repository...\n'
