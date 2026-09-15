@@ -42,7 +42,7 @@ backoff before giving up.
 - A disposable Linux VM reachable from the Mac
 - `openssl` for generating random secrets
 - `curl` for automated Fleet Server setup
-- `lsof` for the port check in `quick-start.sh` (preinstalled on macOS)
+- `lsof` for the port check in `quick-start.sh`
 
 An ARM64 VM is the fastest option on Apple Silicon. Some public kernel exploit
 PoCs may assume x86_64; use an emulated x86_64 VM when a particular PoC does
@@ -73,11 +73,13 @@ confirmation prompt).
 
 ### Enroll the Linux VM
 
-Copy `setup-linux-vm.sh` to your Linux VM and run it with the enrollment token
+Clone the repo and then run `setup-linux-vm.sh` in your Linux VM with the enrollment token
 printed by quick-start:
 
 ```sh
-sudo ./setup-linux-vm.sh --mac-ip 192.168.1.50 --fleet-token YOUR_ENROLLMENT_TOKEN
+git clone https://github.com/reuteras/dockerfiles.git
+cd dockerfiles/elastic-linux-lpe-lab
+sudo ./setup-linux-vm.sh --mac-ip 192.168.X.Y --fleet-token YOUR_ENROLLMENT_TOKEN
 ```
 
 This installs Elastic Agent from the official repository, enrolls with Fleet
@@ -92,7 +94,7 @@ In Kibana:
 
 1. Go to **Security > Rules > Add Elastic rules**
 2. Install the Elastic prebuilt detection rules
-3. Enable rules by filtering on tags:
+3. Enable rules by filtering on tags (you must enable the rules and not just install them):
    - `OS: Linux`
    - `Tactic: Privilege Escalation`
 
