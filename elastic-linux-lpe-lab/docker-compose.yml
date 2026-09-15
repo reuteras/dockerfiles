@@ -85,6 +85,14 @@ services:
       SERVER_PUBLICBASEURL: http://localhost:5601
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:-change-this-to-at-least-32-characters-long}
       TELEMETRY_OPTIN: "false"
+      # Node's fetch picks IPv4 by default even when IPv6 is available, and
+      # IPv4 to epr.elastic.co (the public Elastic Package Registry) gets
+      # rate-limited intermittently while IPv6 does not. quick-start.sh sets
+      # KIBANA_NODE_OPTIONS to prefer IPv6 only after confirming the host
+      # actually has a working outbound IPv6 route; on a v4-only network it
+      # is left empty so Kibana falls back to its default DNS order instead
+      # of trying an unreachable IPv6 address.
+      NODE_OPTIONS: ${KIBANA_NODE_OPTIONS:-}
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -136,3 +144,8 @@ volumes:
 networks:
   elastic:
     driver: bridge
+    # IPv4 to epr.elastic.co (the public Elastic Package Registry) gets
+    # rate-limited intermittently; IPv6 does not. Enabling it here lets
+    # Docker prefer the working path for Elastic Defend / Auditd Manager
+    # package installs.
+    enable_ipv6: true

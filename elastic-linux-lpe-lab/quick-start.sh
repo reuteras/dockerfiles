@@ -105,6 +105,24 @@ check_ports_free() {
   fi
 }
 
+# IPv4 to the public Elastic Package Registry gets rate-limited intermittently;
+# IPv6 does not. Only ask Kibana to prefer IPv6 (via KIBANA_NODE_OPTIONS, read
+# by docker-compose.yml) when this host actually has a working outbound IPv6
+# route to it — Node's fetch does not reliably fall back to IPv4 if the IPv6
+# address is unreachable, so guessing wrong here would break Kibana outright
+# on a v4-only network instead of just leaving the packages to be retried.
+detect_ipv6() {
+  KIBANA_NODE_OPTIONS=""
+  if curl -6 -sS -o /dev/null --connect-timeout 3 --max-time 5 \
+      "https://epr.elastic.co/search?package=endpoint" 2>/dev/null; then
+    KIBANA_NODE_OPTIONS="--dns-result-order=ipv6first"
+    printf 'Outbound IPv6 to the package registry is available; Kibana will prefer it.\n'
+  else
+    printf 'No outbound IPv6 to the package registry detected; Kibana will use its default (IPv4).\n'
+  fi
+  export KIBANA_NODE_OPTIONS
+}
+
 case "${1:-}" in
   clean)
     shift
@@ -184,7 +202,9 @@ printf '=== Elastic Linux LPE Lab - Quick Start ===\n\n'
 printf 'Step 0: Checking prerequisites...\n'
 check_docker
 check_ports_free
-printf 'Docker is running and required ports are free.\n\n'
+printf 'Docker is running and required ports are free.\n'
+detect_ipv6
+printf '\n'
 
 # Step 1: Generate .env if it doesn't exist
 if [[ ! -f "$ENV_FILE" ]]; then
@@ -326,6 +346,10 @@ fi
 printf 'Endpoint policy created: %s\n' "$endpoint_policy_id"
 
 printf 'Adding Elastic Defend integration...\n'
+# No explicit "inputs": the endpoint package's policy template declares no
+# input list of its own (unlike most integrations), so Kibana populates the
+# correct default "endpoint" input itself; a hardcoded input key here 400s
+# with "Input not found".
 defend_response=$(kibana_api_retry "Elastic Defend" 5 \
   -X POST "$KIBANA_HOST/api/fleet/package_policies" \
   -d "{
@@ -336,13 +360,6 @@ defend_response=$(kibana_api_retry "Elastic Defend" 5 \
       \"name\": \"endpoint\",
       \"title\": \"Elastic Defend\",
       \"version\": \"\"
-    },
-    \"inputs\": {
-      \"endpoint-endpoint\": {
-        \"enabled\": true,
-        \"streams\": {},
-        \"vars\": {}
-      }
     }
   }" || true)
 
@@ -368,7 +385,7 @@ auditd_response=$(kibana_api_retry "Auditd Manager" 5 \
       \"version\": \"\"
     },
     \"inputs\": {
-      \"audit-audit/auditd\": {
+      \"auditd-audit/auditd\": {
         \"enabled\": true,
         \"streams\": {},
         \"vars\": {}

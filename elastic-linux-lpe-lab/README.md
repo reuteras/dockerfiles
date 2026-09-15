@@ -23,6 +23,14 @@ Elasticsearch and Kibana listen only on the Mac loopback interface. Fleet
 Server uses HTTP for a simple isolated lab setup, so do not expose port 8220 to
 an untrusted network.
 
+Installing the Elastic Defend and Auditd Manager integrations makes Kibana
+fetch packages from the public Elastic Package Registry (EPR), which
+intermittently rate-limits IPv4 while leaving IPv6 unaffected. `quick-start.sh`
+checks whether this host has a working outbound IPv6 route to EPR and, only if
+so, tells Kibana to prefer it; on an IPv4-only network it leaves Kibana's
+default behavior untouched. Either way, both integration installs retry with
+backoff before giving up.
+
 ## Requirements
 
 - Apple Silicon Mac
