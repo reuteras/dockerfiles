@@ -10,10 +10,13 @@ they observe the VM rather than the Docker container.
 
 ## Architecture
 
-- Elasticsearch 9.5.3 and Kibana 9.5.3 on the Mac
-- Fleet Server 9.5.3 on the Mac, exposed to the lab VM on TCP 8220
+Tested version of Elastic tools are 9.5.3.
+
+- Elasticsearch and Kibana on the Mac
+- Fleet Server on the Mac, exposed to the lab VM on TCP 8220
 - One disposable Linux VM with Elastic Agent
-- Basic license by default
+- Trial license (30 days, full functionality), activated automatically by
+  `quick-start.sh`
 - Persistent Docker volumes for Elasticsearch and Fleet state
 
 Elasticsearch and Kibana listen only on the Mac loopback interface. Fleet
@@ -23,10 +26,11 @@ an untrusted network.
 ## Requirements
 
 - Apple Silicon Mac
-- Docker Desktop with at least 6 GB of memory available
+- Docker Desktop, running, with ports 9200, 5601, and 8220 free
 - A disposable Linux VM reachable from the Mac
 - `openssl` for generating random secrets
 - `curl` for automated Fleet Server setup
+- `lsof` for the port check in `quick-start.sh` (preinstalled on macOS)
 
 An ARM64 VM is the fastest option on Apple Silicon. Some public kernel exploit
 PoCs may assume x86_64; use an emulated x86_64 VM when a particular PoC does
@@ -42,13 +46,18 @@ Run the automated quick-start script:
 
 This script:
 
-1. Generates `.env` with random passwords
-2. Starts Elasticsearch, Kibana, and Fleet Server
-3. Creates a Fleet Server policy and service token
-4. Creates a Linux endpoint policy with Elastic Defend and Auditd Manager
-5. Generates an enrollment token for the endpoint policy
-6. Waits for all services to be healthy
-7. Prints the enrollment command for the Linux VM
+1. Checks that Docker is running and that ports 9200, 5601, and 8220 are free
+2. Generates `.env` with random passwords
+3. Starts Elasticsearch and Kibana, and waits for both to be healthy
+4. Activates a 30-day trial license for full functionality
+5. Creates a Fleet Server policy and service token, then starts Fleet Server
+6. Creates a Linux endpoint policy with Elastic Defend and Auditd Manager
+7. Generates an enrollment token for the endpoint policy
+8. Prints the enrollment command for the Linux VM
+
+Run `./quick-start.sh clean` to stop and remove the lab's containers, network,
+and volumes, and delete the generated `.env` (add `-y` to skip the
+confirmation prompt).
 
 ### Enroll the Linux VM
 
@@ -101,7 +110,14 @@ Stop containers while retaining data:
 docker compose --profile fleet down
 ```
 
-Delete all lab data and return to a clean state:
+Delete all lab data and return to a clean state, including the generated
+`.env`:
+
+```sh
+./quick-start.sh clean
+```
+
+Or do it manually, which keeps `.env` in place:
 
 ```sh
 docker compose --profile fleet down --volumes
