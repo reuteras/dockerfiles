@@ -182,7 +182,7 @@ enroll_agent() {
   systemctl restart elastic-agent
 
   printf 'Checking agent status...\n'
-  systemctl status elastic-agent || true
+  systemctl --no-pager status elastic-agent || true
 }
 
 while [[ $# -gt 0 ]]; do
