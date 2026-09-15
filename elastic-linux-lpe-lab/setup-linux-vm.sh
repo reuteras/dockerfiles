@@ -85,7 +85,7 @@ install_elastic_agent() {
   apt-get install -y -qq curl gpg
 
   printf 'Downloading Elastic Agent signing key...\n'
-  curl -fsS https://artifacts.elastic.co/GPG-KEY-elastic-agents | gpg --dearmor \
+  curl -fsS https://artifacts.elastic.co/GPG-KEY-elastic-agent | gpg --dearmor \
     > /usr/share/keyrings/elastic-agents-archive-keyring.gpg
 
   printf 'Adding Elastic repository...\n'
