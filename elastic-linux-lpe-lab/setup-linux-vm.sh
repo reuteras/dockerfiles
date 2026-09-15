@@ -163,12 +163,13 @@ enroll_agent() {
   # config (path.home=/var/lib/elastic-agent, path.config=/etc/elastic-agent
   # -- see the ExecStart line in systemctl status). Without --path.config,
   # enroll looks for elastic-agent.yml directly under path.home instead of
-  # the split location the systemd service actually reads from. The
-  # package's postinst already started the service in its default,
-  # unenrolled state; stop it first so it isn't racing enroll for the
-  # same config file.
-  systemctl stop elastic-agent || true
-
+  # the split location the systemd service actually reads from.
+  #
+  # Leave the service running: after writing the new config, enroll
+  # signals the already-running daemon over a control socket at
+  # path.home/elastic-agent.sock to hot-reload it. Stopping the service
+  # first (as this used to do) removes that socket, so the reload just
+  # retries against one that will never appear.
   /usr/share/elastic-agent/bin/elastic-agent enroll \
     --path.home=/var/lib/elastic-agent \
     --path.config=/etc/elastic-agent \
@@ -176,9 +177,9 @@ enroll_agent() {
     --enrollment-token="$enrollment_token" \
     --insecure
 
-  printf 'Agent enrolled. Starting service...\n'
+  printf 'Agent enrolled.\n'
   systemctl enable elastic-agent
-  systemctl start elastic-agent
+  systemctl restart elastic-agent
 
   printf 'Checking agent status...\n'
   systemctl status elastic-agent || true
@@ -268,6 +269,5 @@ systemctl is-active elastic-agent || printf 'not running (enable with: sudo syst
 
 printf '\nNote: If you did not provide --mac-ip and --fleet-token,\n'
 printf 'you can enroll the agent later using:\n'
-printf '  sudo systemctl stop elastic-agent\n'
 printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --path.home=/var/lib/elastic-agent --path.config=/etc/elastic-agent --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
-printf '  sudo systemctl start elastic-agent\n'
+printf '  sudo systemctl restart elastic-agent\n'
