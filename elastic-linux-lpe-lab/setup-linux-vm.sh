@@ -175,9 +175,17 @@ fi
 
 printf 'Detected OS: %s %s (%s)\n' "$NAME" "$VERSION_ID" "$(dpkg --print-architecture)"
 
-# Update package lists
+# Update package lists. Tolerate failure here: a previous run of this
+# script may have left a broken third-party repo config (e.g. a bad
+# Elastic signing key) in /etc/apt/sources.list.d, and that would
+# otherwise block every subsequent run before install_elastic_agent()
+# gets a chance to overwrite it with a working one. The apt-get update
+# inside install_elastic_agent(), after that file is rewritten, is not
+# tolerant and is the real gate on whether the install can proceed.
 printf '\nUpdating package lists...\n'
-apt-get update -qq
+if ! apt-get update -qq; then
+  printf 'Warning: apt-get update reported errors (a previously configured repository may be broken); continuing.\n' >&2
+fi
 
 # Kernel installation
 if [[ -n "$KERNEL_VERSION" ]]; then
