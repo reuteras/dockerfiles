@@ -253,6 +253,18 @@ if [[ -n "$KERNEL_VERSION" ]]; then
   install_kernel "$KERNEL_VERSION"
 fi
 
+# Install auditctl (for verifying the rules the Auditd Manager integration
+# pushes, e.g. `auditctl -l`) without letting the auditd package's own
+# service run: the Linux audit netlink socket only supports one exclusive
+# listener, and Elastic's own docs say to stop the system auditd when
+# Auditd Manager is managing rules in the default unicast mode -- otherwise
+# they'd silently fight over it.
+# https://www.elastic.co/docs/reference/integrations/auditd_manager
+printf '\n=== Installing audit tools ===\n'
+apt-get install -y -qq auditd
+systemctl stop auditd || true
+systemctl disable auditd || true
+
 # Install Elastic Agent
 printf '\n=== Installing Elastic Agent ===\n'
 install_elastic_agent

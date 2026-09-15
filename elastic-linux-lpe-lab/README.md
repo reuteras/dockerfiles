@@ -81,7 +81,10 @@ sudo ./setup-linux-vm.sh --mac-ip 192.168.1.50 --fleet-token YOUR_ENROLLMENT_TOK
 ```
 
 This installs Elastic Agent from the official repository, enrolls with Fleet
-Server, and starts the agent service.
+Server, and starts the agent service. It also installs `auditctl` (from the
+`auditd` package, for verifying rules with `sudo auditctl -l`) without
+leaving the system's own `auditd` service running, since it would otherwise
+fight Auditd Manager for the audit netlink socket.
 
 ### Install Prebuilt Detection Rules
 
