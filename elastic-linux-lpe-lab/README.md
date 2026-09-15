@@ -94,8 +94,10 @@ In Kibana:
    - `Tactic: Privilege Escalation`
 
 Auditd Manager provides the syscall-level visibility used by the research,
-including `socket`, `splice`, `bind`, and `execve`. Follow the article's linked
-audit rules for the specific page-cache tests.
+including `socket`, `splice`, `bind`, and `execve`. `quick-start.sh` already
+configures the `socket`/`splice`/`bind` rules from the article's linked
+[Copy Fail and DirtyFrag research](https://www.elastic.co/security-labs/copy-fail-dirtyfrag-linux-page-bugs-in-the-wild)
+on the Auditd Manager integration it creates.
 
 ## Install a Vulnerable Kernel (DSA-6162-1)
 

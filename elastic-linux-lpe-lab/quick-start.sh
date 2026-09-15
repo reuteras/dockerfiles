@@ -422,6 +422,10 @@ else
 fi
 
 printf 'Adding Auditd Manager integration...\n'
+# The page-cache LPE detection class (Copy Fail / DirtyFrag) relies on
+# socket, splice, and bind auditing beyond Auditd Manager's own defaults:
+# https://www.elastic.co/security-labs/copy-fail-dirtyfrag-linux-page-bugs-in-the-wild
+AUDITD_RULES='-a always,exit -F arch=b64 -S socket -k socket_syscall\n-a always,exit -F arch=b32 -S socketcall -k socket_syscall\n-a always,exit -F arch=b64 -S splice -k splice-syscall\n-a always,exit -F arch=b32 -S splice -k splice-syscall\n-a always,exit -F arch=b64 -S bind -k socket_bound\n-a always,exit -F arch=b32 -S bind -k socket_bound'
 auditd_response=$(kibana_api_retry "Auditd Manager" 5 \
   -X POST "$KIBANA_HOST/api/fleet/package_policies" \
   -d "{
@@ -436,8 +440,14 @@ auditd_response=$(kibana_api_retry "Auditd Manager" 5 \
     \"inputs\": {
       \"auditd-audit/auditd\": {
         \"enabled\": true,
-        \"streams\": {},
-        \"vars\": {}
+        \"streams\": {
+          \"auditd_manager.auditd\": {
+            \"enabled\": true,
+            \"vars\": {
+              \"audit_rules\": \"$AUDITD_RULES\"
+            }
+          }
+        }
       }
     }
   }" || true)
