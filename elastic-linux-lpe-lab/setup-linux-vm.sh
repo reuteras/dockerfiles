@@ -159,8 +159,19 @@ enroll_agent() {
   printf 'Enrolling agent with Fleet Server at %s...\n' "$fleet_host"
 
   # The apt package (unlike the tarball install) puts the binary at
-  # /usr/share/elastic-agent/bin/elastic-agent, not /opt/elastic-agent.
+  # /usr/share/elastic-agent/bin/elastic-agent and splits state from
+  # config (path.home=/var/lib/elastic-agent, path.config=/etc/elastic-agent
+  # -- see the ExecStart line in systemctl status). Without --path.config,
+  # enroll looks for elastic-agent.yml directly under path.home instead of
+  # the split location the systemd service actually reads from. The
+  # package's postinst already started the service in its default,
+  # unenrolled state; stop it first so it isn't racing enroll for the
+  # same config file.
+  systemctl stop elastic-agent || true
+
   /usr/share/elastic-agent/bin/elastic-agent enroll \
+    --path.home=/var/lib/elastic-agent \
+    --path.config=/etc/elastic-agent \
     --url="http://${fleet_host}:8220" \
     --enrollment-token="$enrollment_token" \
     --insecure
@@ -257,4 +268,6 @@ systemctl is-active elastic-agent || printf 'not running (enable with: sudo syst
 
 printf '\nNote: If you did not provide --mac-ip and --fleet-token,\n'
 printf 'you can enroll the agent later using:\n'
-printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
+printf '  sudo systemctl stop elastic-agent\n'
+printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --path.home=/var/lib/elastic-agent --path.config=/etc/elastic-agent --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
+printf '  sudo systemctl start elastic-agent\n'

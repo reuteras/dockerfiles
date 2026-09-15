@@ -191,10 +191,17 @@ curl http://localhost:8220/api/status
 ### Enroll a Linux VM Manually
 
 Generate the enrollment command from Kibana, replacing the Fleet URL with
-the Mac address visible to the VM:
+the Mac address visible to the VM. The apt package's systemd service already
+started the agent in its default, unenrolled state, so stop it first — and
+pass `--path.config` explicitly, since without it `enroll` looks for
+`elastic-agent.yml` directly under `--path.home` instead of the split
+`/etc/elastic-agent` location the systemd service actually reads from:
 
 ```sh
+sudo systemctl stop elastic-agent
 sudo /usr/share/elastic-agent/bin/elastic-agent enroll \
+  --path.home=/var/lib/elastic-agent \
+  --path.config=/etc/elastic-agent \
   --url=http://MAC-IP-ADDRESS:8220 \
   --enrollment-token=YOUR_TOKEN \
   --insecure
