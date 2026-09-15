@@ -152,6 +152,32 @@ kibana_api() {
     "$@"
 }
 
+# Retries a kibana_api call up to max_attempts times, with exponential
+# backoff, as long as the response has no "id" field. Package installs
+# (Elastic Defend, Auditd Manager) go through Kibana to the public Elastic
+# Package Registry, which intermittently returns 403/404/500 under load;
+# a short wait usually clears it.
+kibana_api_retry() {
+  local label="$1" max_attempts="$2"; shift 2
+  local attempt=1 delay=5 response
+  while :; do
+    response=$(kibana_api "$@")
+    if echo "$response" | grep -q '"id":"'; then
+      printf '%s\n' "$response"
+      return 0
+    fi
+    if (( attempt >= max_attempts )); then
+      printf '%s\n' "$response"
+      return 1
+    fi
+    printf '  %s: attempt %d/%d failed (likely a transient package-registry error), retrying in %ds...\n' \
+      "$label" "$attempt" "$max_attempts" "$delay" >&2
+    sleep "$delay"
+    delay=$(( delay * 2 < 60 ? delay * 2 : 60 ))
+    (( attempt++ ))
+  done
+}
+
 printf '=== Elastic Linux LPE Lab - Quick Start ===\n\n'
 
 # Step 0: Preflight checks
@@ -300,7 +326,7 @@ fi
 printf 'Endpoint policy created: %s\n' "$endpoint_policy_id"
 
 printf 'Adding Elastic Defend integration...\n'
-defend_response=$(kibana_api \
+defend_response=$(kibana_api_retry "Elastic Defend" 5 \
   -X POST "$KIBANA_HOST/api/fleet/package_policies" \
   -d "{
     \"name\": \"Elastic Defend - LPE Lab\",
@@ -318,7 +344,7 @@ defend_response=$(kibana_api \
         \"vars\": {}
       }
     }
-  }")
+  }" || true)
 
 defend_id=$(echo "$defend_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4 || true)
 
@@ -330,7 +356,7 @@ else
 fi
 
 printf 'Adding Auditd Manager integration...\n'
-auditd_response=$(kibana_api \
+auditd_response=$(kibana_api_retry "Auditd Manager" 5 \
   -X POST "$KIBANA_HOST/api/fleet/package_policies" \
   -d "{
     \"name\": \"Auditd Manager - LPE Lab\",
@@ -348,7 +374,7 @@ auditd_response=$(kibana_api \
         \"vars\": {}
       }
     }
-  }")
+  }" || true)
 
 auditd_id=$(echo "$auditd_response" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4 || true)
 
