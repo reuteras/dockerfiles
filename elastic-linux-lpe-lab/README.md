@@ -103,10 +103,14 @@ DSA-6162-1 addresses AppArmor privilege-escalation vulnerabilities fixed in
 linux 6.12.74-2; the vulnerable 6.12.74-1 has since been superseded in the
 live trixie-security archive, so it's no longer installable with a plain
 `apt install`. Pin a snapshot.debian.org archive from just before the fix
-(verified against the actual package index) instead:
+(verified against the actual package index) instead. `check-valid-until=no`
+is required: snapshot.debian.org's Release files carry a short `Valid-Until`
+(days, not the months this snapshot will realistically age to), and apt
+refuses a repository past that date by default; the option is scoped to only
+this one source, not a global downgrade of apt's freshness checks:
 
 ```sh
-echo 'deb [trusted=yes] http://snapshot.debian.org/archive/debian-security/20260312T211821Z/ trixie-security main' \
+echo 'deb [trusted=yes check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20260312T211821Z/ trixie-security main' \
   | sudo tee /etc/apt/sources.list.d/snapshot-dsa-6162.list
 printf 'Package: *\nPin: origin snapshot.debian.org\nPin-Priority: 1\n' \
   | sudo tee /etc/apt/preferences.d/snapshot-dsa-6162.pref
