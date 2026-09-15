@@ -96,12 +96,28 @@ audit rules for the specific page-cache tests.
 ## Install a Vulnerable Kernel (DSA-6162-1)
 
 DSA-6162-1 addresses AppArmor privilege-escalation vulnerabilities fixed in
-linux 6.12.74-2. To install the pre-fix kernel on an arm64 Debian Trixie VM:
+linux 6.12.74-2; the vulnerable 6.12.74-1 has since been superseded in the
+live trixie-security archive, so it's no longer installable with a plain
+`apt install`. Pin a snapshot.debian.org archive from just before the fix
+(verified against the actual package index) instead:
 
 ```sh
+echo 'deb [trusted=yes] http://snapshot.debian.org/archive/debian-security/20260312T211821Z/ trixie-security main' \
+  | sudo tee /etc/apt/sources.list.d/snapshot-dsa-6162.list
+printf 'Package: *\nPin: origin snapshot.debian.org\nPin-Priority: 1\n' \
+  | sudo tee /etc/apt/preferences.d/snapshot-dsa-6162.pref
 sudo apt update
-sudo apt install -y linux-image-6.12.74-1-arm64
+sudo apt install -y linux-image-6.12.74+deb13-arm64=6.12.74-1
 sudo reboot
+```
+
+The pin file keeps this source from ever being picked for anything but this
+one, explicitly version-pinned package. Once you've booted the vulnerable
+kernel, the snapshot source is no longer needed and can be removed:
+
+```sh
+sudo rm /etc/apt/sources.list.d/snapshot-dsa-6162.list /etc/apt/preferences.d/snapshot-dsa-6162.pref
+sudo apt update
 ```
 
 After reboot, verify with `uname -r` and restart the agent if needed:
