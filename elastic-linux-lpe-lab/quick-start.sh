@@ -299,7 +299,7 @@ kibana_api -X POST "$KIBANA_HOST/api/fleet/setup" >/dev/null || true
 # something different (and unreachable) depending on which machine an
 # agent runs on. Point it at this Mac's actual LAN address before Fleet
 # Server or any agent policy exists, so everything picks up the right
-# value from its first checkin instead of needing a later reload.
+# value from its first check-in instead of needing a later reload.
 printf 'Pointing Fleet default output at http://%s:9200...\n' "$MAC_LAN_IP"
 output_response=$(kibana_api \
   -X PUT "$KIBANA_HOST/api/fleet/outputs/fleet-default-output" \

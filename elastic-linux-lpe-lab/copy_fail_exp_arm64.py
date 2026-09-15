@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import os as g, zlib, socket as s
+import os as g
+import socket as s
+import zlib
 
 
 def d(x):
@@ -31,7 +33,7 @@ def c(f, t, c):
     n(r, u.fileno(), o)
     try:
         u.recv(8 + t)
-    except:
+    except Exception:
         0
 
 
