@@ -288,6 +288,13 @@ printf '  Password: (see .env)\n\n'
 # Step 4: Create Fleet Server policy and service token
 printf 'Step 4: Creating Fleet Server policy...\n'
 
+# Fleet's default output object doesn't exist until Fleet's internal setup
+# runs, which normally happens lazily on the first Fleet API call -- on a
+# fresh instance that would otherwise be the agent_policies POST just below,
+# so trigger it explicitly first or the output PUT 404s against an object
+# that doesn't exist yet.
+kibana_api -X POST "$KIBANA_HOST/api/fleet/setup" >/dev/null || true
+
 # Kibana's built-in default output is http://localhost:9200, which means
 # something different (and unreachable) depending on which machine an
 # agent runs on. Point it at this Mac's actual LAN address before Fleet
