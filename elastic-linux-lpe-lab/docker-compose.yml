@@ -34,7 +34,12 @@ services:
       bootstrap.memory_lock: "true"
       ES_JAVA_OPTS: -Xms2g -Xmx2g
     ports:
-      - 127.0.0.1:9200:9200
+      # Reachable from the lab network, not just the Mac: agents (Fleet
+      # Server's own monitoring, and the Linux VM's Elastic Defend/Auditd
+      # Manager data) ship to whatever host Fleet's default output points
+      # at, and can't reach a loopback-only address. Same trust boundary
+      # already accepted for Fleet Server's port 8220 below.
+      - 9200:9200
     volumes:
       - es-data:/usr/share/elasticsearch/data
     healthcheck:

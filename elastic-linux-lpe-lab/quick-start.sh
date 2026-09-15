@@ -123,6 +123,30 @@ detect_ipv6() {
   export KIBANA_NODE_OPTIONS
 }
 
+# Agents (Fleet Server's own monitoring, and the Linux VM's Elastic Defend /
+# Auditd Manager data) ship to whatever host Fleet's default output points
+# at; that needs to be an address reachable from the lab network, not
+# "localhost" (which is what Kibana defaults to and means something
+# different, and unreachable, depending on which machine an agent runs on).
+# `route get default`'s interface is unreliable here when a VPN is active
+# (it resolves to the tunnel, not the real LAN interface), so use en0
+# directly -- the primary interface on every Apple Silicon Mac -- with en1
+# as a fallback for the uncommon case it's the primary instead. Override
+# with MAC_LAN_IP if neither is right for a given machine.
+detect_mac_lan_ip() {
+  if [[ -n "${MAC_LAN_IP:-}" ]]; then
+    printf 'Using MAC_LAN_IP from environment: %s\n' "$MAC_LAN_IP"
+    return 0
+  fi
+  MAC_LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
+  if [[ -z "$MAC_LAN_IP" ]]; then
+    printf 'Error: Could not detect this Mac'"'"'s LAN IP (checked en0, en1).\n' >&2
+    printf 'Set it explicitly, e.g.: MAC_LAN_IP=192.168.1.50 %s\n' "$(basename "$0")" >&2
+    exit 1
+  fi
+  printf 'Detected Mac LAN IP: %s (override with MAC_LAN_IP if wrong)\n' "$MAC_LAN_IP"
+}
+
 case "${1:-}" in
   clean)
     shift
@@ -204,6 +228,7 @@ check_docker
 check_ports_free
 printf 'Docker is running and required ports are free.\n'
 detect_ipv6
+detect_mac_lan_ip
 printf '\n'
 
 # Step 1: Generate .env if it doesn't exist
@@ -262,6 +287,23 @@ printf '  Password: (see .env)\n\n'
 
 # Step 4: Create Fleet Server policy and service token
 printf 'Step 4: Creating Fleet Server policy...\n'
+
+# Kibana's built-in default output is http://localhost:9200, which means
+# something different (and unreachable) depending on which machine an
+# agent runs on. Point it at this Mac's actual LAN address before Fleet
+# Server or any agent policy exists, so everything picks up the right
+# value from its first checkin instead of needing a later reload.
+printf 'Pointing Fleet default output at http://%s:9200...\n' "$MAC_LAN_IP"
+output_response=$(kibana_api \
+  -X PUT "$KIBANA_HOST/api/fleet/outputs/fleet-default-output" \
+  -d "{\"hosts\": [\"http://${MAC_LAN_IP}:9200\"]}" || true)
+
+if ! echo "$output_response" | grep -q '"id":"fleet-default-output"'; then
+  printf 'Warning: Failed to update Fleet default output; agents may not be able to ship data.\n'
+  printf 'Response: %s\n\n' "$output_response"
+else
+  printf 'Fleet default output updated.\n\n'
+fi
 
 fleet_policy_response=$(kibana_api \
   -X POST "$KIBANA_HOST/api/fleet/agent_policies?sys_monitoring=true" \

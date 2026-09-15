@@ -19,9 +19,13 @@ Tested version of Elastic tools are 9.5.3.
   `quick-start.sh`
 - Persistent Docker volumes for Elasticsearch and Fleet state
 
-Elasticsearch and Kibana listen only on the Mac loopback interface. Fleet
-Server uses HTTP for a simple isolated lab setup, so do not expose port 8220 to
-an untrusted network.
+Kibana listens only on the Mac loopback interface. Elasticsearch and Fleet
+Server are both exposed to the lab network (TCP 9200 and 8220) so agents —
+Fleet Server's own monitoring, and the Linux VM's Elastic Defend/Auditd
+Manager data — can actually ship data to Elasticsearch; `quick-start.sh`
+points Fleet's default output at the Mac's LAN address for this. Both use
+plain HTTP with no TLS for this simple isolated lab setup, so do not expose
+either port to an untrusted network.
 
 Installing the Elastic Defend and Auditd Manager integrations makes Kibana
 fetch packages from the public Elastic Package Registry (EPR), which
