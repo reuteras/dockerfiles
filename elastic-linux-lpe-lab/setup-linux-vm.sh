@@ -14,6 +14,25 @@
 
 set -euo pipefail
 
+# IPv4 to artifacts.elastic.co gets rate-limited intermittently by Elastic's
+# CDN (observed directly: repeated 403s under IPv4 load, 0 failures over
+# IPv6); apt calls against it should retry and prefer IPv6 when available.
+# Detected at runtime rather than hardcoded: forcing IPv6 on a network
+# without a working route would break the fetch outright instead of just
+# hitting the existing rate limit, and this script may run on VMs with
+# different connectivity than wherever it happens to be tested.
+APT_ELASTIC_OPTS=(-o "Acquire::Retries=5")
+
+detect_apt_ipv6() {
+  if curl -6 -sS -o /dev/null --connect-timeout 3 --max-time 5 \
+      "https://artifacts.elastic.co/GPG-KEY-elasticsearch" 2>/dev/null; then
+    printf 'Outbound IPv6 to artifacts.elastic.co is available; apt will prefer it for the Elastic repository.\n'
+    APT_ELASTIC_OPTS+=(-o "Acquire::ForceIPv6=true")
+  else
+    printf 'No outbound IPv6 to artifacts.elastic.co detected; apt will use its default (IPv4).\n'
+  fi
+}
+
 KERNEL_VERSION=""
 MAC_IP=""
 FLEET_HOST="${FLEET_HOST:-}"
@@ -84,6 +103,8 @@ install_elastic_agent() {
   # Install Elastic Agent from the official repository
   apt-get install -y -qq curl gpg
 
+  detect_apt_ipv6
+
   printf 'Downloading Elastic Agent signing key...\n'
   # Same signing key (fingerprint 46095ACC8548582C1A2699A9D27D666CD88E42B4)
   # as GPG-KEY-elastic-agent, but re-certified in 2023 with a SHA-256
@@ -91,17 +112,21 @@ install_elastic_agent() {
   # trixie's default apt verifier (sqv) rejects SHA-1-bound keys as of
   # 2026-02-01, so GPG-KEY-elastic-agent fails "not bound" verification
   # there even though it signs this exact repository.
-  curl -fsS https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor \
+  local key_curl_opts=(-fsS --retry 5 --retry-connrefused --retry-all-errors)
+  if [[ " ${APT_ELASTIC_OPTS[*]} " == *"ForceIPv6=true"* ]]; then
+    key_curl_opts+=(-6)
+  fi
+  curl "${key_curl_opts[@]}" https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor \
     > /usr/share/keyrings/elastic-agents-archive-keyring.gpg
 
   printf 'Adding Elastic repository...\n'
   echo "deb [signed-by=/usr/share/keyrings/elastic-agents-archive-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" \
     > /etc/apt/sources.list.d/elastic-agents.list
 
-  apt-get update -qq
+  apt-get "${APT_ELASTIC_OPTS[@]}" update -qq
 
   printf 'Installing Elastic Agent...\n'
-  apt-get install -y -qq elastic-agent
+  apt-get "${APT_ELASTIC_OPTS[@]}" install -y -qq elastic-agent
 
   printf 'Elastic Agent installed successfully.\n'
 }
