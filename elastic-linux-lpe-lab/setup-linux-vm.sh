@@ -158,7 +158,9 @@ enroll_agent() {
 
   printf 'Enrolling agent with Fleet Server at %s...\n' "$fleet_host"
 
-  /opt/elastic-agent/elastic-agent enroll \
+  # The apt package (unlike the tarball install) puts the binary at
+  # /usr/share/elastic-agent/bin/elastic-agent, not /opt/elastic-agent.
+  /usr/share/elastic-agent/bin/elastic-agent enroll \
     --url="http://${fleet_host}:8220" \
     --enrollment-token="$enrollment_token" \
     --insecure
@@ -255,4 +257,4 @@ systemctl is-active elastic-agent || printf 'not running (enable with: sudo syst
 
 printf '\nNote: If you did not provide --mac-ip and --fleet-token,\n'
 printf 'you can enroll the agent later using:\n'
-printf '  sudo elastic-agent enroll --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
+printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'

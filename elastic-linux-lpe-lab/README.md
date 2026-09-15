@@ -194,7 +194,7 @@ Generate the enrollment command from Kibana, replacing the Fleet URL with
 the Mac address visible to the VM:
 
 ```sh
-sudo elastic-agent enroll \
+sudo /usr/share/elastic-agent/bin/elastic-agent enroll \
   --url=http://MAC-IP-ADDRESS:8220 \
   --enrollment-token=YOUR_TOKEN \
   --insecure
