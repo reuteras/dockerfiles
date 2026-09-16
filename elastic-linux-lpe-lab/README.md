@@ -10,7 +10,7 @@ they observe the VM rather than the Docker container.
 
 ## Architecture
 
-Tested version of Elastic tools are 9.5.3.
+Tested version of Elastic tools are can be found in .env.examle.
 
 - Elasticsearch and Kibana on the Mac
 - Fleet Server on the Mac, exposed to the lab VM on TCP 8220
