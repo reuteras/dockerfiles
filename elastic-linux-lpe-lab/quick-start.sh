@@ -162,7 +162,7 @@ detect_lan_host_ip() {
     fi
     printf ').\n' >&2
     printf 'Set it explicitly, e.g.: LAN_HOST_IP=192.168.1.50 %s\n' "$(basename "$0")" >&2
-    printf 'On Windows/WSL, find it with `ipconfig.exe` in PowerShell (your Wi-Fi/Ethernet adapter'"'"'s IPv4, not the WSL vEthernet one).\n' >&2
+    printf 'On Windows/WSL, find it with ipconfig.exe in PowerShell (your Wi-Fi/Ethernet adapter'"'"'s IPv4, not the WSL vEthernet one).\n' >&2
     exit 1
   fi
   printf 'Detected LAN IP: %s (override with LAN_HOST_IP if wrong)\n' "$LAN_HOST_IP"
