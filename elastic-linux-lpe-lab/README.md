@@ -4,11 +4,13 @@ Minimal Elastic Security control plane for testing Linux local privilege
 escalation detections from the Elastic Security Labs article
 [Linux Detection Engineering - Local Privilege Escalation](https://www.elastic.co/security-labs/threat-command/linux-privilege-escalation-detection-framework).
 
-The server components run in Docker Desktop, developed and primarily tested
-on an Apple Silicon Mac (see [Running on Windows](#running-on-windows) for
-notes on the other supported host). Elastic Agent, Elastic Defend, and Auditd
-Manager run inside a disposable Linux VM so they observe the VM rather than
-the Docker container.
+The server components run in Docker (Docker Desktop, or a native Linux Docker
+Engine), developed and primarily tested on an Apple Silicon Mac (see
+[Running on Windows](#running-on-windows) for notes on that host; a native
+Linux host needs no special handling beyond `LAB_PLATFORM=linux/amd64` on
+non-ARM machines — see [Requirements](#requirements)). Elastic Agent, Elastic
+Defend, and Auditd Manager run inside a disposable Linux VM so they observe
+the VM rather than the Docker container.
 
 ## Architecture
 
@@ -39,15 +41,19 @@ backoff before giving up.
 
 ## Requirements
 
-- Apple Silicon Mac, or Windows with WSL2 (see [Running on Windows](#running-on-windows))
-- Docker Desktop, running, with ports 9200, 5601, and 8220 free
+- Apple Silicon Mac, native Linux, or Windows with WSL2 (see
+  [Running on Windows](#running-on-windows))
+- Docker Desktop (Mac/Windows) or Docker Engine (Linux), running, with ports
+  9200, 5601, and 8220 free
 - A disposable Linux VM reachable from the host
 - `openssl` for generating random secrets
 - `curl` for automated Fleet Server setup
 - `lsof` for the port check in `quick-start.sh`
+- On non-ARM64 hosts (most Linux and Windows machines): set `LAB_PLATFORM=linux/amd64` when running `quick-start.sh` or `docker compose` directly — the compose file defaults to `linux/arm64` for Apple Silicon
 
-A VM matching the host's native architecture is the fastest option (ARM64 on
-Apple Silicon, x86_64 on most Windows/Intel machines). Some public kernel
+`quick-start.sh` detects the host's LAN-facing IP automatically on macOS (`en0`/`en1`), native Linux (`ip route get`), and WSL2 (`ipconfig.exe` interop); override it with `LAN_HOST_IP=<ip>` if it picks the wrong one (a VPN's tunnel interface, for example) or can't detect one at all.
+
+A VM matching the host's native architecture is the fastest option (ARM64 on Apple Silicon, x86_64 on most Linux and Windows/Intel machines). Some public kernel
 exploit PoCs assume x86_64; use an emulated x86_64 VM when a particular PoC
 does not support ARM64.
 

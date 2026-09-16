@@ -138,8 +138,13 @@ detect_ipv6() {
 # physical Ethernet/Wi-Fi adapter sections -- ipconfig.exe also lists
 # virtual adapters (vEthernet, Default Switch, Bluetooth PAN, loopback)
 # that would silently point agents at an unreachable address instead of
-# just failing loudly. Override with LAN_HOST_IP if none of this is right
-# for a given machine.
+# just failing loudly. On native Linux, neither of those exist, so fall
+# back to the source address the kernel's own routing table would pick for
+# a packet to the public internet (`ip route get`, a routing-table lookup
+# only -- it sends nothing and needs no actual connectivity); like the
+# macOS `route get default` case above, this resolves to a VPN tunnel
+# instead of the real LAN interface when one is active. Override with
+# LAN_HOST_IP if none of this is right for a given machine.
 detect_lan_host_ip() {
   if [[ -n "${LAN_HOST_IP:-}" ]]; then
     printf 'Using LAN_HOST_IP from environment: %s\n' "$LAN_HOST_IP"
@@ -155,10 +160,17 @@ detect_lan_host_ip() {
     ')
   fi
 
+  if [[ -z "$LAN_HOST_IP" ]] && command -v ip >/dev/null 2>&1; then
+    LAN_HOST_IP=$(ip -4 -o route get 1.1.1.1 2>/dev/null | grep -oE 'src [0-9.]+' | cut -d' ' -f2)
+  fi
+
   if [[ -z "$LAN_HOST_IP" ]]; then
     printf 'Error: Could not detect this host'"'"'s LAN IP (checked en0, en1' >&2
     if command -v ipconfig.exe >/dev/null 2>&1; then
       printf ', ipconfig.exe' >&2
+    fi
+    if command -v ip >/dev/null 2>&1; then
+      printf ', ip route get' >&2
     fi
     printf ').\n' >&2
     printf 'Set it explicitly, e.g.: LAN_HOST_IP=192.168.1.50 %s\n' "$(basename "$0")" >&2
