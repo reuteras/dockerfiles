@@ -4,26 +4,28 @@ Minimal Elastic Security control plane for testing Linux local privilege
 escalation detections from the Elastic Security Labs article
 [Linux Detection Engineering - Local Privilege Escalation](https://www.elastic.co/security-labs/threat-command/linux-privilege-escalation-detection-framework).
 
-The server components run in Docker Desktop on an Apple Silicon Mac. Elastic
-Agent, Elastic Defend, and Auditd Manager run inside a disposable Linux VM so
-they observe the VM rather than the Docker container.
+The server components run in Docker Desktop, developed and primarily tested
+on an Apple Silicon Mac (see [Running on Windows](#running-on-windows) for
+notes on the other supported host). Elastic Agent, Elastic Defend, and Auditd
+Manager run inside a disposable Linux VM so they observe the VM rather than
+the Docker container.
 
 ## Architecture
 
 Tested versions of Elastic tools can be found in .env.example.
 
-- Elasticsearch and Kibana on the Mac
-- Fleet Server on the Mac, exposed to the lab VM on TCP 8220
+- Elasticsearch and Kibana on the host
+- Fleet Server on the host, exposed to the lab VM on TCP 8220
 - One disposable Linux VM with Elastic Agent
 - Trial license (30 days, full functionality), activated automatically by
   `quick-start.sh`
 - Persistent Docker volumes for Elasticsearch and Fleet state
 
-Kibana listens only on the Mac loopback interface. Elasticsearch and Fleet
+Kibana listens only on the host's loopback interface. Elasticsearch and Fleet
 Server are both exposed to the lab network (TCP 9200 and 8220) so agents —
 Fleet Server's own monitoring, and the Linux VM's Elastic Defend/Auditd
 Manager data — can actually ship data to Elasticsearch; `quick-start.sh`
-points Fleet's default output at the Mac's LAN address for this. Both use
+points Fleet's default output at the host's LAN address for this. Both use
 plain HTTP with no TLS for this simple isolated lab setup, so do not expose
 either port to an untrusted network.
 
@@ -37,16 +39,17 @@ backoff before giving up.
 
 ## Requirements
 
-- Apple Silicon Mac
+- Apple Silicon Mac, or Windows with WSL2 (see [Running on Windows](#running-on-windows))
 - Docker Desktop, running, with ports 9200, 5601, and 8220 free
-- A disposable Linux VM reachable from the Mac
+- A disposable Linux VM reachable from the host
 - `openssl` for generating random secrets
 - `curl` for automated Fleet Server setup
 - `lsof` for the port check in `quick-start.sh`
 
-An ARM64 VM is the fastest option on Apple Silicon. Some public kernel exploit
-PoCs may assume x86_64; use an emulated x86_64 VM when a particular PoC does
-not support ARM64.
+A VM matching the host's native architecture is the fastest option (ARM64 on
+Apple Silicon, x86_64 on most Windows/Intel machines). Some public kernel
+exploit PoCs assume x86_64; use an emulated x86_64 VM when a particular PoC
+does not support ARM64.
 
 ## Quick Start
 
@@ -79,7 +82,7 @@ printed by quick-start:
 ```sh
 git clone https://github.com/reuteras/dockerfiles.git
 cd dockerfiles/elastic-linux-lpe-lab
-sudo ./setup-linux-vm.sh --mac-ip 192.168.X.Y --fleet-token YOUR_ENROLLMENT_TOKEN
+sudo ./setup-linux-vm.sh --host-ip 192.168.X.Y --fleet-token YOUR_ENROLLMENT_TOKEN
 ```
 
 This installs Elastic Agent from the official repository, enrolls with Fleet
@@ -164,6 +167,48 @@ docker compose --profile fleet down --volumes
 
 Deleting the volumes is irreversible.
 
+## Running on Windows
+
+The stack itself is architecture-agnostic; only the host-side scripting
+assumed macOS. Run everything from inside WSL2 rather than PowerShell — it's
+the only environment here with the bash/GNU-sed/lsof the scripts expect.
+
+1. Install Docker Desktop for Windows with the WSL2 backend, and enable
+   integration with an Ubuntu (or other) WSL2 distro.
+2. Inside that distro: `sudo apt install lsof` (not preinstalled; `openssl`
+   and `curl` usually already are).
+3. Clone the repo into the WSL2 filesystem (e.g. `~/dockerfiles`), not
+   `/mnt/c/...` — cloning onto the Windows filesystem risks CRLF line endings
+   on the shell scripts and is noticeably slower.
+4. Most Windows/Intel machines are x86_64, not Apple Silicon's arm64, so set
+   `LAB_PLATFORM=linux/amd64` (otherwise Docker pulls arm64 images and runs
+   them under slow QEMU emulation):
+
+   ```sh
+   LAB_PLATFORM=linux/amd64 ./quick-start.sh
+   ```
+
+5. `quick-start.sh` detects the LAN-facing IP it needs to hand to Fleet (so
+   agents on the lab VM, a separate machine, can reach it) by checking macOS's
+   `en0`/`en1` first, then falling back to asking the Windows host for its
+   LAN adapter's IPv4 via `ipconfig.exe` interop — WSL2's own `eth0` address
+   is NATed and unreachable from the lab VM. If that fallback picks the wrong
+   adapter or finds none, override it directly: run `ipconfig` in PowerShell,
+   find your Wi-Fi/Ethernet adapter's IPv4 (not the `vEthernet (WSL)` one),
+   and pass it explicitly:
+
+   ```sh
+   LAN_HOST_IP=192.168.1.50 LAB_PLATFORM=linux/amd64 ./quick-start.sh
+   ```
+
+6. Docker Desktop publishes container ports (9200, 8220) on the Windows host
+   itself, independent of WSL2's internal networking, so the lab VM reaching
+   `http://<LAN_HOST_IP>:8220` should work once Windows Defender Firewall
+   allows inbound connections on those ports for the private network (Docker
+   Desktop typically prompts for this the first time).
+7. Enroll the Linux VM the same way as on macOS, using `--host-ip` (see
+   [Enroll the Linux VM](#enroll-the-linux-vm)).
+
 ## Manual Setup Reference
 
 These steps are the manual equivalents of what the automated scripts do.
@@ -222,7 +267,7 @@ curl http://localhost:8220/api/status
 ### Enroll a Linux VM Manually
 
 Generate the enrollment command from Kibana, replacing the Fleet URL with
-the Mac address visible to the VM. Leave the systemd service running — after
+the host address visible to the VM. Leave the systemd service running — after
 writing the new config, `enroll` hot-reloads the already-running daemon over
 a control socket under `--path.home`, so stopping it first just makes that
 reload retry against a socket that will never reappear. Pass `--path.config`
@@ -234,7 +279,7 @@ location the systemd service actually reads from:
 sudo /usr/share/elastic-agent/bin/elastic-agent enroll \
   --path.home=/var/lib/elastic-agent \
   --path.config=/etc/elastic-agent \
-  --url=http://MAC-IP-ADDRESS:8220 \
+  --url=http://HOST-IP-ADDRESS:8220 \
   --enrollment-token=YOUR_TOKEN \
   --insecure
 ```

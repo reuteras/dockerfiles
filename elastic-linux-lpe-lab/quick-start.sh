@@ -131,20 +131,41 @@ detect_ipv6() {
 # `route get default`'s interface is unreliable here when a VPN is active
 # (it resolves to the tunnel, not the real LAN interface), so use en0
 # directly -- the primary interface on every Apple Silicon Mac -- with en1
-# as a fallback for the uncommon case it's the primary instead. Override
-# with MAC_LAN_IP if neither is right for a given machine.
-detect_mac_lan_ip() {
-  if [[ -n "${MAC_LAN_IP:-}" ]]; then
-    printf 'Using MAC_LAN_IP from environment: %s\n' "$MAC_LAN_IP"
+# as a fallback for the uncommon case it's the primary instead. On WSL2,
+# en0/en1 don't exist and the distro's own eth0 is a NATed address the lab
+# VM (a separate machine on the LAN) can't reach, so ask the Windows host
+# for its LAN-facing IPv4 via ipconfig.exe interop instead, restricted to
+# physical Ethernet/Wi-Fi adapter sections -- ipconfig.exe also lists
+# virtual adapters (vEthernet, Default Switch, Bluetooth PAN, loopback)
+# that would silently point agents at an unreachable address instead of
+# just failing loudly. Override with LAN_HOST_IP if none of this is right
+# for a given machine.
+detect_lan_host_ip() {
+  if [[ -n "${LAN_HOST_IP:-}" ]]; then
+    printf 'Using LAN_HOST_IP from environment: %s\n' "$LAN_HOST_IP"
     return 0
   fi
-  MAC_LAN_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
-  if [[ -z "$MAC_LAN_IP" ]]; then
-    printf 'Error: Could not detect this Mac'"'"'s LAN IP (checked en0, en1).\n' >&2
-    printf 'Set it explicitly, e.g.: MAC_LAN_IP=192.168.1.50 %s\n' "$(basename "$0")" >&2
+
+  LAN_HOST_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
+
+  if [[ -z "$LAN_HOST_IP" ]] && command -v ipconfig.exe >/dev/null 2>&1; then
+    LAN_HOST_IP=$(ipconfig.exe 2>/dev/null | awk '
+      /^(Ethernet adapter|Wireless LAN adapter)/ { keep = ($0 !~ /vEthernet|Bluetooth|Loopback|Default Switch/) }
+      keep && /IPv4 Address/ { gsub(/\r/, ""); sub(/.*: /, ""); print; exit }
+    ')
+  fi
+
+  if [[ -z "$LAN_HOST_IP" ]]; then
+    printf 'Error: Could not detect this host'"'"'s LAN IP (checked en0, en1' >&2
+    if command -v ipconfig.exe >/dev/null 2>&1; then
+      printf ', ipconfig.exe' >&2
+    fi
+    printf ').\n' >&2
+    printf 'Set it explicitly, e.g.: LAN_HOST_IP=192.168.1.50 %s\n' "$(basename "$0")" >&2
+    printf 'On Windows/WSL, find it with `ipconfig.exe` in PowerShell (your Wi-Fi/Ethernet adapter'"'"'s IPv4, not the WSL vEthernet one).\n' >&2
     exit 1
   fi
-  printf 'Detected Mac LAN IP: %s (override with MAC_LAN_IP if wrong)\n' "$MAC_LAN_IP"
+  printf 'Detected LAN IP: %s (override with LAN_HOST_IP if wrong)\n' "$LAN_HOST_IP"
 }
 
 case "${1:-}" in
@@ -228,7 +249,7 @@ check_docker
 check_ports_free
 printf 'Docker is running and required ports are free.\n'
 detect_ipv6
-detect_mac_lan_ip
+detect_lan_host_ip
 printf '\n'
 
 # Step 1: Generate .env if it doesn't exist
@@ -297,13 +318,13 @@ kibana_api -X POST "$KIBANA_HOST/api/fleet/setup" >/dev/null || true
 
 # Kibana's built-in default output is http://localhost:9200, which means
 # something different (and unreachable) depending on which machine an
-# agent runs on. Point it at this Mac's actual LAN address before Fleet
+# agent runs on. Point it at this host's actual LAN address before Fleet
 # Server or any agent policy exists, so everything picks up the right
 # value from its first check-in instead of needing a later reload.
-printf 'Pointing Fleet default output at http://%s:9200...\n' "$MAC_LAN_IP"
+printf 'Pointing Fleet default output at http://%s:9200...\n' "$LAN_HOST_IP"
 output_response=$(kibana_api \
   -X PUT "$KIBANA_HOST/api/fleet/outputs/fleet-default-output" \
-  -d "{\"hosts\": [\"http://${MAC_LAN_IP}:9200\"]}" || true)
+  -d "{\"hosts\": [\"http://${LAN_HOST_IP}:9200\"]}" || true)
 
 if ! echo "$output_response" | grep -q '"id":"fleet-default-output"'; then
   printf 'Warning: Failed to update Fleet default output; agents may not be able to ship data.\n'
@@ -539,7 +560,7 @@ printf '\n\n'
 
 if [[ -n "${enrollment_token:-}" ]]; then
   printf 'Enroll your Linux VM with:\n'
-  printf '  sudo ./setup-linux-vm.sh --mac-ip YOUR_MAC_IP --fleet-token %s\n\n' "$enrollment_token"
+  printf '  sudo ./setup-linux-vm.sh --host-ip YOUR_HOST_IP --fleet-token %s\n\n' "$enrollment_token"
 fi
 
 printf 'After enrollment, install prebuilt detection rules in Kibana:\n'

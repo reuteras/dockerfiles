@@ -3,12 +3,12 @@
 # Setup script for Linux VM in elastic-linux-lpe-lab.
 # Installs Elastic Agent and optionally upgrades to a specific kernel.
 #
-# Usage: ./setup-linux-vm.sh [--kernel KERNEL_VERSION] [--mac-ip MAC_IP]
+# Usage: ./setup-linux-vm.sh [--kernel KERNEL_VERSION] [--host-ip HOST_IP]
 #
 # Examples:
 #   ./setup-linux-vm.sh                    # Just install Elastic Agent
-#   ./setup-linux-vm.sh --mac-ip 192.168.1.50
-#   ./setup-linux-vm.sh --kernel 6.7 --mac-ip 192.168.1.50
+#   ./setup-linux-vm.sh --host-ip 192.168.1.50
+#   ./setup-linux-vm.sh --kernel 6.7 --host-ip 192.168.1.50
 #
 # This script is meant to be run on the target Linux VM.
 
@@ -53,7 +53,7 @@ retry_with_backoff() {
 }
 
 KERNEL_VERSION=""
-MAC_IP=""
+HOST_IP=""
 FLEET_HOST="${FLEET_HOST:-}"
 FLEET_ENROLLMENT_TOKEN="${FLEET_ENROLLMENT_TOKEN:-}"
 
@@ -63,7 +63,7 @@ elastic-linux-lpe-lab: Linux VM setup script
 
 Options:
   --kernel KERNEL_VERSION    Install specific kernel version (e.g., '6.7', '6.8.1')
-  --mac-ip MAC_IP           Fleet Server IP (e.g., 192.168.1.50)
+  --host-ip HOST_IP         Fleet Server IP (e.g., 192.168.1.50)
   --fleet-token TOKEN       Fleet enrollment token
   --help                    Show this help message
 
@@ -191,8 +191,8 @@ while [[ $# -gt 0 ]]; do
       KERNEL_VERSION="$2"
       shift 2
       ;;
-    --mac-ip)
-      MAC_IP="$2"
+    --host-ip)
+      HOST_IP="$2"
       shift 2
       ;;
     --fleet-token)
@@ -270,16 +270,16 @@ printf '\n=== Installing Elastic Agent ===\n'
 install_elastic_agent
 
 # Generate enrollment command
-if [[ -n "$MAC_IP" && -n "$FLEET_ENROLLMENT_TOKEN" ]]; then
+if [[ -n "$HOST_IP" && -n "$FLEET_ENROLLMENT_TOKEN" ]]; then
   printf '\n=== Enrolling with Fleet Server ===\n'
-  enroll_agent "$MAC_IP" "$FLEET_ENROLLMENT_TOKEN"
+  enroll_agent "$HOST_IP" "$FLEET_ENROLLMENT_TOKEN"
 fi
 
 printf '\n=== Setup Complete ===\n'
 printf 'Elastic Agent status: '
 systemctl is-active elastic-agent || printf 'not running (enable with: sudo systemctl start elastic-agent)\n'
 
-printf '\nNote: If you did not provide --mac-ip and --fleet-token,\n'
+printf '\nNote: If you did not provide --host-ip and --fleet-token,\n'
 printf 'you can enroll the agent later using:\n'
-printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --path.home=/var/lib/elastic-agent --path.config=/etc/elastic-agent --url http://YOUR_MAC_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
+printf '  sudo /usr/share/elastic-agent/bin/elastic-agent enroll --path.home=/var/lib/elastic-agent --path.config=/etc/elastic-agent --url http://YOUR_HOST_IP:8220 --enrollment-token YOUR_TOKEN --insecure\n'
 printf '  sudo systemctl restart elastic-agent\n'
