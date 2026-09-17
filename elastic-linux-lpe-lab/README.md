@@ -198,10 +198,13 @@ the only environment here with the bash/GNU-sed/lsof the scripts expect.
    agents on the lab VM, a separate machine, can reach it) by checking macOS's
    `en0`/`en1` first, then falling back to asking the Windows host for its
    LAN adapter's IPv4 via `ipconfig.exe` interop — WSL2's own `eth0` address
-   is NATed and unreachable from the lab VM. If that fallback picks the wrong
-   adapter or finds none, override it directly: run `ipconfig` in PowerShell,
-   find your Wi-Fi/Ethernet adapter's IPv4 (not the `vEthernet (WSL)` one),
-   and pass it explicitly:
+   is NATed and unreachable from the lab VM. Windows can report the wrong
+   adapter here, so when running interactively the script prints the
+   detected IP and interface name and asks you to confirm before continuing
+   (non-interactive runs skip the prompt and trust the detected value). If
+   it picks the wrong adapter or finds none, override it directly: run
+   `ipconfig` in PowerShell, find your Wi-Fi/Ethernet adapter's IPv4 (not the
+   `vEthernet (WSL)` one), and pass it explicitly:
 
    ```sh
    LAN_HOST_IP=192.168.1.50 LAB_PLATFORM=linux/amd64 ./quick-start.sh

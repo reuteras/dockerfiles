@@ -154,10 +154,36 @@ detect_lan_host_ip() {
   LAN_HOST_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
 
   if [[ -z "$LAN_HOST_IP" ]] && command -v ipconfig.exe >/dev/null 2>&1; then
-    LAN_HOST_IP=$(ipconfig.exe 2>/dev/null | awk '
-      /^(Ethernet adapter|Wireless LAN adapter)/ { keep = ($0 !~ /vEthernet|Bluetooth|Loopback|Default Switch/) }
-      keep && /IPv4 Address/ { gsub(/\r/, ""); sub(/.*: /, ""); print; exit }
+    local wsl_ip_iface
+    wsl_ip_iface=$(ipconfig.exe 2>/dev/null | awk '
+      /^(Ethernet adapter|Wireless LAN adapter)/ {
+        gsub(/\r/, "")
+        name = $0
+        sub(/^[A-Za-z ]+ adapter /, "", name)
+        sub(/:$/, "", name)
+        keep = ($0 !~ /vEthernet|Bluetooth|Loopback|Default Switch/)
+      }
+      keep && /IPv4 Address/ { gsub(/\r/, ""); ip = $0; sub(/.*: /, "", ip); print ip "|" name; exit }
     ')
+    LAN_HOST_IP="${wsl_ip_iface%%|*}"
+    local wsl_iface_name="${wsl_ip_iface#*|}"
+
+    # ipconfig.exe reports whatever Windows thinks is the active
+    # adapter, which has been observed to be wrong (e.g. picking a
+    # secondary/disconnected adapter over the real LAN one) -- unlike
+    # the macOS and native-Linux paths above, there's no reliable
+    # routing-table check available from inside WSL2, so ask the user
+    # to confirm rather than silently trusting it.
+    if [[ -n "$LAN_HOST_IP" ]] && [[ -t 0 ]]; then
+      printf 'Detected via WSL2 (ipconfig.exe): %s on interface "%s"\n' "$LAN_HOST_IP" "$wsl_iface_name"
+      local wsl_ip_confirm
+      read -r -p "Is this the correct LAN-facing IP? [Y/n] " wsl_ip_confirm
+      case "$wsl_ip_confirm" in
+        n|N|no|NO)
+          read -r -p "Enter the correct LAN IP: " LAN_HOST_IP
+          ;;
+      esac
+    fi
   fi
 
   if [[ -z "$LAN_HOST_IP" ]] && command -v ip >/dev/null 2>&1; then

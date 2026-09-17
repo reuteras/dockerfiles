@@ -80,9 +80,6 @@ install_kernel() {
 
   local arch
   arch=$(dpkg --print-architecture)
-  if [[ "$arch" != "arm64" ]]; then
-    printf 'Warning: This system is %s, not arm64. Kernel installation may differ.\n' "$arch"
-  fi
 
   # Add backports repo if needed for newer kernels
   if ! grep -q 'debian.*backports' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
@@ -96,15 +93,15 @@ install_kernel() {
   case "$kernel_version" in
     latest|current)
       printf 'Installing latest kernel...\n'
-      apt-get install -y -qq linux-image-arm64
+      apt-get install -y -qq "linux-image-$arch"
       ;;
     *)
       # Try to install specific version
       printf 'Searching for kernel version %s...\n' "$kernel_version"
       if apt-cache search "linux-image-$kernel_version" | grep -q "^linux-image"; then
-        apt-get install -y -qq "linux-image-$kernel_version-arm64"
-      elif apt-cache search "linux-image-arm64" | grep -q "$kernel_version"; then
-        apt-get install -y -qq "linux-image-${kernel_version}-arm64"
+        apt-get install -y -qq "linux-image-$kernel_version-$arch"
+      elif apt-cache search "linux-image-$arch" | grep -q "$kernel_version"; then
+        apt-get install -y -qq "linux-image-${kernel_version}-$arch"
       else
         printf 'Warning: Kernel version %s not found in repositories.\n' "$kernel_version"
         printf 'Installing from April 2026 snapshot requires:\n'
