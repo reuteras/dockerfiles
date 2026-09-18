@@ -624,7 +624,7 @@ printf '\n\n'
 
 if [[ -n "${enrollment_token:-}" ]]; then
   printf 'Enroll your Linux VM with:\n'
-  printf '  sudo ./setup-linux-vm.sh --host-ip YOUR_HOST_IP --fleet-token %s\n\n' "$enrollment_token"
+  printf '  sudo ./setup-linux-vm.sh --host-ip %s --fleet-token %s\n\n' "$LAN_HOST_IP" "$enrollment_token"
 fi
 
 printf 'After enrollment, install prebuilt detection rules in Kibana:\n'
