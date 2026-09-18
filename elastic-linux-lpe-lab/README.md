@@ -7,8 +7,9 @@ escalation detections from the Elastic Security Labs article
 The server components run in Docker (Docker Desktop, or a native Linux Docker
 Engine), developed and primarily tested on an Apple Silicon Mac (see
 [Running on Windows](#running-on-windows) for notes on that host; a native
-Linux host needs no special handling beyond `LAB_PLATFORM=linux/amd64` on
-non-ARM machines — see [Requirements](#requirements)). Elastic Agent, Elastic
+Linux host needs no special handling — `quick-start.sh` detects a non-ARM64
+host and points Docker at the right image architecture automatically, see
+[Requirements](#requirements)). Elastic Agent, Elastic
 Defend, and Auditd Manager run inside a disposable Linux VM so they observe
 the VM rather than the Docker container.
 
@@ -49,7 +50,7 @@ backoff before giving up.
 - `openssl` for generating random secrets
 - `curl` for automated Fleet Server setup
 - `lsof` for the port check in `quick-start.sh`
-- On non-ARM64 hosts (most Linux and Windows machines): set `LAB_PLATFORM=linux/amd64` when running `quick-start.sh` or `docker compose` directly — the compose file defaults to `linux/arm64` for Apple Silicon
+- On non-ARM64 hosts (most Linux and Windows machines): `quick-start.sh` sets `LAB_PLATFORM=linux/amd64` automatically — the compose file itself defaults to `linux/arm64` for Apple Silicon, so pass `LAB_PLATFORM=linux/amd64` explicitly if invoking `docker compose` directly instead of `quick-start.sh`
 
 `quick-start.sh` detects the host's LAN-facing IP automatically on macOS (`en0`/`en1`), native Linux (`ip route get`), and WSL2 (`ipconfig.exe` interop); override it with `LAN_HOST_IP=<ip>` if it picks the wrong one (a VPN's tunnel interface, for example) or can't detect one at all.
 
@@ -186,9 +187,14 @@ the only environment here with the bash/GNU-sed/lsof the scripts expect.
 3. Clone the repo into the WSL2 filesystem (e.g. `~/dockerfiles`), not
    `/mnt/c/...` — cloning onto the Windows filesystem risks CRLF line endings
    on the shell scripts and is noticeably slower.
-4. Most Windows/Intel machines are x86_64, not Apple Silicon's arm64, so set
-   `LAB_PLATFORM=linux/amd64` (otherwise Docker pulls arm64 images and runs
-   them under slow QEMU emulation):
+4. Most Windows/Intel machines are x86_64, not Apple Silicon's arm64.
+   `quick-start.sh` detects this and sets `LAB_PLATFORM=linux/amd64`
+   automatically — running it under emulation instead (`LAB_PLATFORM` forced
+   to `linux/arm64` on an x86_64 host, or vice versa) doesn't just run slower,
+   it breaks Elasticsearch outright: its seccomp exec-sandbox bootstrap check
+   fails under QEMU emulation ("CONFIG_SECCOMP not compiled into kernel"),
+   crash-looping the container. Override with `LAB_PLATFORM=...` only if the
+   detected value is wrong for your setup:
 
    ```sh
    LAB_PLATFORM=linux/amd64 ./quick-start.sh

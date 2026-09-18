@@ -279,6 +279,31 @@ kibana_api_retry() {
   done
 }
 
+# docker-compose.yml defaults LAB_PLATFORM to linux/arm64 (tuned for Apple
+# Silicon). On any other host architecture that silently pulls/runs the
+# arm64 images under QEMU emulation instead of natively -- which, for
+# Elasticsearch specifically, breaks its seccomp exec-sandbox bootstrap
+# check ("CONFIG_SECCOMP not compiled into kernel") because the emulation
+# layer doesn't support it, crash-looping the container. Detect the host's
+# real architecture and point LAB_PLATFORM at it so native images are used
+# everywhere except actual Apple Silicon.
+detect_platform() {
+  if [[ -n "${LAB_PLATFORM:-}" ]]; then
+    printf 'Using LAB_PLATFORM from environment: %s\n' "$LAB_PLATFORM"
+    return 0
+  fi
+  case "$(uname -m)" in
+    x86_64|amd64) LAB_PLATFORM=linux/amd64 ;;
+    aarch64|arm64) LAB_PLATFORM=linux/arm64 ;;
+    *)
+      printf 'Warning: Unrecognized architecture "%s"; defaulting LAB_PLATFORM to linux/amd64.\n' "$(uname -m)" >&2
+      LAB_PLATFORM=linux/amd64
+      ;;
+  esac
+  export LAB_PLATFORM
+  printf 'Detected platform: %s (override with LAB_PLATFORM if wrong)\n' "$LAB_PLATFORM"
+}
+
 printf '=== Elastic Linux LPE Lab - Quick Start ===\n\n'
 
 # Step 0: Preflight checks
@@ -288,6 +313,7 @@ check_ports_free
 printf 'Docker is running and required ports are free.\n'
 detect_ipv6
 detect_lan_host_ip
+detect_platform
 printf '\n'
 
 # Step 1: Generate .env if it doesn't exist
