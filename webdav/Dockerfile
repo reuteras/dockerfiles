@@ -23,10 +23,10 @@ RUN rm /etc/nginx/sites-enabled/* && \
 VOLUME /webdav
 EXPOSE 80
 
-USER www-data
+USER 33
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD nc -z localhost 80 || exit 1
+    CMD ["/bin/sh", "-c", "nc -z localhost 80 || exit 1"]
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

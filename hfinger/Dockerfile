@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV VIRTUAL_ENV=/hfinger/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-USER root
+USER 0
 
 # Install all OS dependencies for fully functional notebook server
 # hadolint ignore=DL3008
@@ -29,7 +29,7 @@ RUN python3 -m venv $VIRTUAL_ENV && \
     rm -rf .git && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
-USER nobody
+USER 65534
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD /hfinger/venv/bin/python -c "import hfinger" || exit 1
+    CMD ["/bin/sh", "-c", "/hfinger/venv/bin/python -c \"import hfinger\" || exit 1"]

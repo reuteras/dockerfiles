@@ -20,11 +20,11 @@ RUN apk update && \
 
 FROM alpine:3.24.1
 
-USER nobody
+USER 65534
 
 COPY --from=build /go/bin/fq /fq
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD /fq --version || exit 1
+    CMD ["/bin/sh", "-c", "/fq --version || exit 1"]
 
 ENTRYPOINT ["/fq", "-cU"]

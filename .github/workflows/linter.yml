@@ -40,6 +40,10 @@ jobs:
         env:
           FILTER_REGEX_EXCLUDE: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # pre-commit can't install node hooks with the npm shipped in
+          # super-linter v9 (EALLOWGIT). Markdown is still checked by
+          # super-linter's own MARKDOWN linter.
+          SKIP: markdownlint
           VALIDATE_BIOME_FORMAT: false
           VALIDATE_JSCPD: false
           VALIDATE_JSON_PRETTIER: false
