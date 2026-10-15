@@ -27,9 +27,9 @@ RUN apt-get update && \
 
 WORKDIR /output
 
-USER nobody
+USER 65534
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD /usr/local/zeek/bin/zeek --version || exit 1
+    CMD ["/bin/sh", "-c", "/usr/local/zeek/bin/zeek --version || exit 1"]
 
 CMD [ "/bin/bash", "-l" ]

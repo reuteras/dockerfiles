@@ -11,9 +11,9 @@ RUN apk update && \
     go build -o convert . && \
     rm -rf /var/cache/apk/*
 
-USER nobody
+USER 65534
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD /go/src/app/convert --help || exit 1
+    CMD ["/bin/sh", "-c", "/go/src/app/convert --help || exit 1"]
 
 CMD ["/go/src/app/convert"]

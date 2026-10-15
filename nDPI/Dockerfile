@@ -71,9 +71,9 @@ RUN apt-get update -yqq && \
     rm -rf /usr/share/doc && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
-USER nobody
+USER 65534
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD /opt/bin/ndpi-netfilter --help || exit 1
+    CMD ["/bin/sh", "-c", "/opt/bin/ndpi-netfilter --help || exit 1"]
 
 CMD ["/bin/bash"]
