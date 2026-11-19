@@ -9,7 +9,7 @@ USER 0
 
 # Install all OS dependencies for fully functional notebook server
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -yq --no-install-recommends \
+RUN apt-get update && apt-get upgrade -yq && apt-get install -yq --no-install-recommends \
     ca-certificates \
     git \
     jq \
