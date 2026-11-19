@@ -20,6 +20,9 @@ RUN apk update && \
 
 FROM alpine:3.24.1
 
+# Alpine security updates the official image does not have yet.
+RUN apk upgrade --no-cache
+
 USER 65534
 
 COPY --from=build /go/bin/fq /fq

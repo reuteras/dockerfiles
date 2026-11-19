@@ -6,6 +6,7 @@ COPY go.mod .
 
 # hadolint ignore=DL3008,DL3018
 RUN apk update && \
+    apk upgrade --no-cache && \
     apk add --no-cache git && \
     go mod tidy && \
     go build -o convert . && \
