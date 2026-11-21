@@ -12,7 +12,6 @@ Collection of Dockerfiles in one repo instead of adding a new repository for eac
 - [nDPI](https://github.com/ntop/nDPI) - Deep packet inspection toolkit. Usage and more in [nDPI](./nDPI/README.md)
 - [nginx](./nginx/README.md) - nginx configured with WebDAV-style upload support
 - [snort2suricata](https://github.com/google/gonids) - Converts Snort rules to Suricata rules. Usage and more in [snort2suricata](./snort2suricata/README.md)
-- [webdav](./webdav/README.md) - nginx-based WebDAV server
 - [zeek](https://github.com/zeek/zeek) - Network security monitoring platform. Usage and more in [zeek](./zeek/README.md)
 
 ## Repositories with one tool in each

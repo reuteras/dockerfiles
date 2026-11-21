@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd AS builder
+FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS builder
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
@@ -46,7 +46,7 @@ RUN ./autogen.sh && \
     rm -rf /usr/share/doc && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
-FROM debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd
+FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 
 WORKDIR /pcap
 ENV PATH="$PATH:/opt/bin"
@@ -56,6 +56,7 @@ COPY --from=builder /opt /opt
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update -yqq && \
+    apt-get upgrade -yqq && \
     apt-get install -yqq --no-install-recommends \
         ca-certificates \
         libjson-c-dev \

@@ -46,17 +46,6 @@ updates:
           - "*"
 
   - package-ecosystem: "docker"
-    directory: "/webdav"
-    schedule:
-      interval: "weekly"
-    cooldown:
-      default-days: 7
-    groups:
-      docker-webdav-deps:
-        patterns:
-          - "*"
-
-  - package-ecosystem: "docker"
     directory: "/zeek"
     schedule:
       interval: "weekly"
