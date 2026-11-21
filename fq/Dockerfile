@@ -1,4 +1,4 @@
-FROM golang:1.27-alpine AS build
+FROM golang:1.27-alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280 AS build
 
 WORKDIR /go/src/github.com/wader/fq
 
@@ -18,7 +18,7 @@ RUN apk update && \
     update-ca-certificates && \
     go install github.com/wader/fq@master
 
-FROM alpine:3.24.1
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 # Alpine security updates the official image does not have yet.
 RUN apk upgrade --no-cache

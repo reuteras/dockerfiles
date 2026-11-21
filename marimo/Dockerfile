@@ -1,4 +1,4 @@
-FROM python:3.15-trixie
+FROM python:3.15-trixie@sha256:cc8e02af50fcaf0944fd02158cd77abce78eb4b41ac0217a8434bbc475225e09
 
 LABEL maintainer="Coding <code@ongoing.today>"
 

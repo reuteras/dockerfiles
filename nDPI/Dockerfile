@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim AS builder
+FROM debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd AS builder
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
@@ -46,7 +46,7 @@ RUN ./autogen.sh && \
     rm -rf /usr/share/doc && \
     rm -rf /usr/local/share/man /var/cache/debconf/*-old
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim@sha256:e5b6442dd2e9684cf5e87d8338b5968f3b348636fc0be6d7850a381e3731a2bd
 
 WORKDIR /pcap
 ENV PATH="$PATH:/opt/bin"

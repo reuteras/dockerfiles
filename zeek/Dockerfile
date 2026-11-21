@@ -1,4 +1,4 @@
-FROM zeek/zeek:9.0
+FROM zeek/zeek:9.0@sha256:524cb0ce29f26a6a954fb9c357a8f92b95812476d8240f0ece26617ace249dd0
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
