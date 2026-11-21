@@ -68,6 +68,11 @@ jobs:
       - name: Scan image
         env:
           DOCKERFILE: ${{ matrix.dockerfile }}
+          # Findings in these image paths are logged and counted but do not
+          # fail the job: the fix is not ours to make.
+          # - uv/uvx binaries (marimo needs uv at runtime for --sandbox): Rust crates
+          # - bundled by upstream; 0.13.9 is the latest release (Dependabot bumps it)
+          IGNORE_PATHS: "^(/usr/bin/uvx?|/home/marimo/\\.venv/bin/uvx?)$"
         run: |
           set -euo pipefail
           scanner=$(sed -n 's/^FROM //p' .github/osv-scanner/Dockerfile)
@@ -84,6 +89,7 @@ jobs:
           cat > "$RUNNER_TEMP/fixable.jq" <<'EOF'
           [ .results[]?
             | (.source.path // "?") as $src
+            | select($ignore == "" or ($src | test($ignore) | not))
             | .packages[]?
             | .package as $p
             | .vulnerabilities[]?
@@ -95,9 +101,10 @@ jobs:
           EOF
           result="$RUNNER_TEMP/result.json"
           total=$(jq '[.results[]?.packages[]?.vulnerabilities[]?.id] | unique | length' "$result")
-          fixable=$(jq -r -f "$RUNNER_TEMP/fixable.jq" "$result")
+          fixable=$(jq -r --arg ignore "${IGNORE_PATHS:-}" -f "$RUNNER_TEMP/fixable.jq" "$result")
           nfix=$(printf '%s' "$fixable" | grep -c . || true)
-          echo "$DOCKERFILE: $total vulnerabilities, $nfix with a fix available" | tee -a "$GITHUB_STEP_SUMMARY"
+          nall=$(jq -r --arg ignore "" -f "$RUNNER_TEMP/fixable.jq" "$result" | grep -c . || true)
+          echo "$DOCKERFILE: $total vulnerabilities, $nfix with a fix available ($((nall - nfix)) more in ignored paths)" | tee -a "$GITHUB_STEP_SUMMARY"
           if [ "$nfix" -gt 0 ]; then
             {
               echo '```'
