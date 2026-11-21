@@ -1,12 +1,14 @@
-FROM python:3.15-trixie@sha256:cc8e02af50fcaf0944fd02158cd77abce78eb4b41ac0217a8434bbc475225e09
+# Python 3.14: marimo[recommended] pulls loro, whose PyO3 does not support 3.15 yet
+FROM python:3.14-trixie@sha256:8a6b0a0ed63fb9d4ea59ee320591109f14205bbe7a787c51d9f72ad2a2f7e89c
 
 LABEL maintainer="Coding <code@ongoing.today>"
 
 # Install uv for fast package management
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.13.9@sha256:d3b601f0c7b118bc1753febf7c41cc80981df678445e0254284eecf84db79a7d /uv /uvx /bin/
 
 # hadolint ignore=DL3008
 RUN apt-get -y update && \
+    apt-get -y upgrade && \
     apt-get -y install --no-install-recommends \
         git \
         vim && \
