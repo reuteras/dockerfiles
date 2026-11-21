@@ -4,7 +4,7 @@ updates:
   - package-ecosystem: "docker" # zizmor: ignore[dependabot-cooldown]
     directory: "/marimo"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     # cooldown omitted: Dependabot crashes (DockerRegistry2::NotFound) when
     # applying cooldown to python:3.14-bookworm due to a Docker Hub blob 404
     groups:
@@ -15,7 +15,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/nDPI"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -26,7 +26,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/nginx"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -37,7 +37,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/snort2suricata"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -48,7 +48,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/zeek"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -59,7 +59,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/fq"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -70,7 +70,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/hfinger"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -81,7 +81,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -92,7 +92,7 @@ updates:
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
     groups:
@@ -103,6 +103,6 @@ updates:
   - package-ecosystem: "docker"
     directory: "/.github/osv-scanner"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     cooldown:
       default-days: 7
